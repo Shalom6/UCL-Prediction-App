@@ -1,0 +1,208 @@
+function clamp(x, min, max) {
+  return Math.max(min, Math.min(max, x));
+}
+
+function round(n, dp = 2) {
+  const p = 10 ** dp;
+  return Math.round(n * p) / p;
+}
+
+function poissonPmf(k, lambda) {
+  let fact = 1;
+  for (let i = 2; i <= k; i++) fact *= i;
+  return (Math.exp(-lambda) * lambda ** k) / fact;
+}
+
+function scoreMatrix(lambdaHome, lambdaAway, maxGoals = 6) {
+  const matrix = [];
+  for (let h = 0; h <= maxGoals; h++) {
+    for (let a = 0; a <= maxGoals; a++) {
+      matrix.push({
+        h,
+        a,
+        p: poissonPmf(h, lambdaHome) * poissonPmf(a, lambdaAway)
+      });
+    }
+  }
+  const sum = matrix.reduce((acc, x) => acc + x.p, 0);
+  for (const cell of matrix) cell.p /= sum;
+  return matrix;
+}
+
+function outcomeFromMatrix(matrix) {
+  let homeWin = 0;
+  let draw = 0;
+  let awayWin = 0;
+  for (const c of matrix) {
+    if (c.h > c.a) homeWin += c.p;
+    else if (c.h === c.a) draw += c.p;
+    else awayWin += c.p;
+  }
+  const sum = homeWin + draw + awayWin;
+  return { homeWin: homeWin / sum, draw: draw / sum, awayWin: awayWin / sum };
+}
+
+function normalizeOutcome(o) {
+  if (!o) return null;
+  const homeWin = Number(o.homeWin);
+  const draw = Number(o.draw);
+  const awayWin = Number(o.awayWin);
+  if (![homeWin, draw, awayWin].every(Number.isFinite)) return null;
+  const sum = homeWin + draw + awayWin;
+  if (sum <= 0) return null;
+  return { homeWin: homeWin / sum, draw: draw / sum, awayWin: awayWin / sum };
+}
+
+function blendOutcomes(a, b, wa, wb) {
+  const sum = wa + wb;
+  const A = normalizeOutcome(a);
+  const B = normalizeOutcome(b);
+  if (!A && !B) return null;
+  if (!A) return B;
+  if (!B) return A;
+  return normalizeOutcome({
+    homeWin: (A.homeWin * wa + B.homeWin * wb) / sum,
+    draw: (A.draw * wa + B.draw * wb) / sum,
+    awayWin: (A.awayWin * wa + B.awayWin * wb) / sum
+  });
+}
+
+function buildExpectedStats({ home, away, lambdaHome, lambdaAway, context }) {
+  const finalTempo = context.finalTempo ?? 0.95;
+  const homeXg = lambdaHome * (home.xgPerGoal ?? 1.05);
+  const awayXg = lambdaAway * (away.xgPerGoal ?? 1.05);
+
+  const homeShots = clamp((homeXg / (home.xgPerShot ?? 0.1)) * finalTempo, 6, 28);
+  const awayShots = clamp((awayXg / (away.xgPerShot ?? 0.1)) * finalTempo, 6, 28);
+
+  const homeSot = clamp(homeShots * (home.sotRate ?? 0.34), 2, 12);
+  const awaySot = clamp(awayShots * (away.sotRate ?? 0.34), 2, 12);
+
+  const homeCorners = clamp(homeShots * (home.cornersPerShot ?? 0.22), 2, 12);
+  const awayCorners = clamp(awayShots * (away.cornersPerShot ?? 0.22), 2, 12);
+
+  const controlHome = clamp((home.control ?? 0.5) / ((home.control ?? 0.5) + (away.control ?? 0.5)), 0.35, 0.65);
+  const homePoss = clamp(50 + (controlHome - 0.5) * 20, 38, 62);
+  const awayPoss = 100 - homePoss;
+
+  return {
+    home: {
+      xG: round(homeXg, 2),
+      shots: round(homeShots, 1),
+      shotsOnTarget: round(homeSot, 1),
+      corners: round(homeCorners, 1),
+      possession: round(homePoss, 0)
+    },
+    away: {
+      xG: round(awayXg, 2),
+      shots: round(awayShots, 1),
+      shotsOnTarget: round(awaySot, 1),
+      corners: round(awayCorners, 1),
+      possession: round(awayPoss, 0)
+    }
+  };
+}
+
+function topScorelines(matrix, homeName, awayName, topN = 7) {
+  return matrix
+    .slice()
+    .sort((a, b) => b.p - a.p)
+    .slice(0, topN)
+    .map((c) => ({
+      score: `${homeName} ${c.h}-${c.a} ${awayName}`,
+      homeGoals: c.h,
+      awayGoals: c.a,
+      probability: round(c.p * 100, 1)
+    }));
+}
+
+function scorerProbabilities(team, expectedGoals) {
+  const players = team.players?.filter((p) => p.likelyStarter || p.benchImpact) ?? [];
+  const totalShare = players.reduce((acc, p) => acc + (p.xgShare ?? 0), 0) || 1;
+
+  const out = players.map((p) => {
+    const share = (p.xgShare ?? 0) / totalShare;
+    const playerLambda = expectedGoals * share * (p.minutesFactor ?? 1);
+    const anytime = 1 - Math.exp(-playerLambda);
+    return {
+      name: p.name,
+      team: team.name,
+      probability: round(anytime * 100, 1)
+    };
+  });
+
+  return out.sort((a, b) => b.probability - a.probability);
+}
+
+export function buildPrediction({ fixture, home, away, market, blend }) {
+  const neutralVenue = fixture.neutralVenue ?? true;
+  const homeAttack = home.goalsForPerMatch;
+  const homeDefense = home.goalsAgainstPerMatch;
+  const awayAttack = away.goalsForPerMatch;
+  const awayDefense = away.goalsAgainstPerMatch;
+
+  const homeEdge = neutralVenue ? 0.0 : 0.1;
+  const finalScale = clamp(fixture.finalScale ?? 0.92, 0.82, 1.0);
+
+  let lambdaHome = (homeAttack + awayDefense) / 2 + homeEdge;
+  let lambdaAway = (awayAttack + homeDefense) / 2;
+  lambdaHome = clamp(lambdaHome * finalScale, 0.2, 3.2);
+  lambdaAway = clamp(lambdaAway * finalScale, 0.2, 3.2);
+
+  const matrix = scoreMatrix(lambdaHome, lambdaAway, 6);
+  const modelOutcome = outcomeFromMatrix(matrix);
+
+  const wMarket = clamp(Number(blend?.marketWeight ?? 0.0), 0, 1);
+  const wModel = clamp(Number(blend?.modelWeight ?? 1.0), 0, 1);
+  const blended = blendOutcomes(market, modelOutcome, wMarket, wModel);
+
+  const expectedStats = buildExpectedStats({
+    home,
+    away,
+    lambdaHome,
+    lambdaAway,
+    context: { finalTempo: fixture.finalTempo ?? 0.95, finalScale }
+  });
+
+  const scorerHome = scorerProbabilities(home, lambdaHome);
+  const scorerAway = scorerProbabilities(away, lambdaAway);
+  const topScorers = [...scorerHome.slice(0, 5), ...scorerAway.slice(0, 5)].sort((a, b) => b.probability - a.probability);
+
+  return {
+    fixture: {
+      competition: fixture.competition ?? 'UEFA Champions League',
+      stage: fixture.stage ?? 'Final',
+      venueCity: fixture.venueCity ?? 'Budapest',
+      date: fixture.date ?? 'May 30',
+      homeTeam: home.name,
+      awayTeam: away.name,
+      neutralVenue
+    },
+    model: {
+      lambda: { home: round(lambdaHome, 2), away: round(lambdaAway, 2) },
+      outcome: {
+        homeWin: round(modelOutcome.homeWin * 100, 1),
+        draw: round(modelOutcome.draw * 100, 1),
+        awayWin: round(modelOutcome.awayWin * 100, 1)
+      }
+    },
+    market: normalizeOutcome(market)
+      ? {
+          homeWin: round(normalizeOutcome(market).homeWin * 100, 1),
+          draw: round(normalizeOutcome(market).draw * 100, 1),
+          awayWin: round(normalizeOutcome(market).awayWin * 100, 1)
+        }
+      : null,
+    blended: blended
+      ? {
+          homeWin: round(blended.homeWin * 100, 1),
+          draw: round(blended.draw * 100, 1),
+          awayWin: round(blended.awayWin * 100, 1)
+        }
+      : null,
+    expectedStats,
+    topScorelines: topScorelines(matrix, home.name, away.name, 7),
+    topScorers: topScorers.slice(0, 10)
+  };
+}
+
