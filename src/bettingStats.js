@@ -18,7 +18,7 @@ function poissonPmf(k, lambda) {
   return (Math.exp(-lambda) * lambda ** k) / fact;
 }
 
-function probOverLine(lambda, line) {
+export function probOverLine(lambda, line) {
   const kMin = Math.floor(line) + 1;
   let p = 0;
   const cap = Math.max(25, kMin + 15);
@@ -26,7 +26,7 @@ function probOverLine(lambda, line) {
   return clamp(p, 0, 1);
 }
 
-function ouLines(lambda, lines) {
+export function ouLines(lambda, lines) {
   return lines.map((line) => {
     const over = probOverLine(lambda, line);
     return { line, overPct: round(over * 100, 1), underPct: round((1 - over) * 100, 1) };

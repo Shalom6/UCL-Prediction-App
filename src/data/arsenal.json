@@ -106,28 +106,52 @@
         "position": "Attacker",
         "likelyStarter": true,
         "minutesFactor": 0.97,
-        "xgShare": 0.186
+        "xgShare": 0.22,
+        "propProfile": {
+          "shotsShare": 0.578,
+          "sotShare": 0.612,
+          "cardWeight": 0.093,
+          "foulWeight": 0.087
+        }
       },
       {
         "name": "V. Gyökeres",
         "position": "Attacker",
         "likelyStarter": true,
         "minutesFactor": 0.92,
-        "xgShare": 0.169
+        "xgShare": 0.2,
+        "propProfile": {
+          "shotsShare": 0.53,
+          "sotShare": 0.56,
+          "cardWeight": 0.09,
+          "foulWeight": 0.085
+        }
       },
       {
         "name": "G. Martinelli",
         "position": "Attacker",
         "likelyStarter": true,
         "minutesFactor": 0.9,
-        "xgShare": 0.119
+        "xgShare": 0.14,
+        "propProfile": {
+          "shotsShare": 0.386,
+          "sotShare": 0.404,
+          "cardWeight": 0.081,
+          "foulWeight": 0.079
+        }
       },
       {
         "name": "E. Eze",
-        "position": "Midfielder",
+        "position": "Attacker",
         "likelyStarter": true,
         "minutesFactor": 0.85,
-        "xgShare": 0.102
+        "xgShare": 0.12,
+        "propProfile": {
+          "shotsShare": 0.338,
+          "sotShare": 0.352,
+          "cardWeight": 0.078,
+          "foulWeight": 0.077
+        }
       },
       {
         "name": "L. Trossard",
@@ -135,28 +159,52 @@
         "likelyStarter": false,
         "benchImpact": true,
         "minutesFactor": 0.7,
-        "xgShare": 0.068
+        "xgShare": 0.08,
+        "propProfile": {
+          "shotsShare": 0.242,
+          "sotShare": 0.248,
+          "cardWeight": 0.072,
+          "foulWeight": 0.073
+        }
       },
       {
         "name": "M. Ødegaard",
         "position": "Midfielder",
         "likelyStarter": true,
         "minutesFactor": 0.94,
-        "xgShare": 0.068
+        "xgShare": 0.08,
+        "propProfile": {
+          "shotsShare": 0.178,
+          "sotShare": 0.146,
+          "cardWeight": 0.106,
+          "foulWeight": 0.105
+        }
       },
       {
         "name": "D. Rice",
         "position": "Midfielder",
         "likelyStarter": true,
         "minutesFactor": 0.95,
-        "xgShare": 0.025
+        "xgShare": 0.03,
+        "propProfile": {
+          "shotsShare": 0.111,
+          "sotShare": 0.086,
+          "cardWeight": 0.096,
+          "foulWeight": 0.099
+        }
       },
       {
         "name": "M. Zubimendi",
         "position": "Midfielder",
         "likelyStarter": true,
         "minutesFactor": 0.93,
-        "xgShare": 0.034
+        "xgShare": 0.04,
+        "propProfile": {
+          "shotsShare": 0.124,
+          "sotShare": 0.098,
+          "cardWeight": 0.098,
+          "foulWeight": 0.1
+        }
       },
       {
         "name": "M. Merino",
@@ -164,80 +212,96 @@
         "likelyStarter": false,
         "benchImpact": true,
         "minutesFactor": 0.75,
-        "xgShare": 0.042
+        "xgShare": 0.05,
+        "propProfile": {
+          "shotsShare": 0.138,
+          "sotShare": 0.11,
+          "cardWeight": 0.1,
+          "foulWeight": 0.101
+        }
       },
       {
         "name": "Gabriel",
         "position": "Defender",
         "likelyStarter": true,
         "minutesFactor": 0.92,
-        "xgShare": 0.034
+        "xgShare": 0.04,
+        "propProfile": {
+          "shotsShare": 0.065,
+          "sotShare": 0.045,
+          "cardWeight": 0.132,
+          "foulWeight": 0.116
+        }
       },
       {
         "name": "W. Saliba",
         "position": "Defender",
         "likelyStarter": true,
         "minutesFactor": 0.93,
-        "xgShare": 0.017
+        "xgShare": 0.02,
+        "propProfile": {
+          "shotsShare": 0.05,
+          "sotShare": 0.035,
+          "cardWeight": 0.126,
+          "foulWeight": 0.113
+        }
       },
       {
         "name": "J. Timber",
         "position": "Defender",
         "likelyStarter": true,
         "minutesFactor": 0.9,
-        "xgShare": 0.017
+        "xgShare": 0.02,
+        "propProfile": {
+          "shotsShare": 0.05,
+          "sotShare": 0.035,
+          "cardWeight": 0.126,
+          "foulWeight": 0.113
+        }
       },
       {
         "name": "R. Calafiori",
         "position": "Defender",
         "likelyStarter": true,
         "minutesFactor": 0.88,
-        "xgShare": 0.025
+        "xgShare": 0.03,
+        "propProfile": {
+          "shotsShare": 0.058,
+          "sotShare": 0.04,
+          "cardWeight": 0.129,
+          "foulWeight": 0.115
+        }
       },
       {
         "name": "B. White",
         "position": "Defender",
         "likelyStarter": true,
         "minutesFactor": 0.91,
-        "xgShare": 0.017
+        "xgShare": 0.02,
+        "propProfile": {
+          "shotsShare": 0.05,
+          "sotShare": 0.035,
+          "cardWeight": 0.126,
+          "foulWeight": 0.113
+        }
       },
       {
         "name": "D. Raya",
         "position": "Goalkeeper",
         "likelyStarter": true,
         "minutesFactor": 1,
-        "xgShare": 0
-      },
-      {
-        "name": "A. Annous",
-        "position": "Attacker",
-        "likelyStarter": false,
-        "benchImpact": true,
-        "minutesFactor": 0.35,
-        "xgShare": 0.025
-      },
-      {
-        "name": "B. Bailey-Joseph",
-        "position": "Attacker",
-        "likelyStarter": false,
-        "benchImpact": true,
-        "minutesFactor": 0.35,
-        "xgShare": 0.025
-      },
-      {
-        "name": "C. O’Neill",
-        "position": "Attacker",
-        "likelyStarter": false,
-        "benchImpact": true,
-        "minutesFactor": 0.35,
-        "xgShare": 0.025
+        "xgShare": 0,
+        "propProfile": {
+          "shotsShare": 0.07,
+          "sotShare": 0.05,
+          "cardWeight": 0.09,
+          "foulWeight": 0.095
+        }
       }
     ],
-    "importSource": "bundled+balldontlie",
+    "importSource": "bundled-curated-2025-26",
     "lastImportedAt": "2026-05-29T22:58:05.759Z",
-    "lastSyncedAt": "2026-05-29T22:54:05.353Z",
-    "importApiSeason": 2025,
-    "importApiSeasonLabel": "2025-26",
+    "lastSyncedAt": "2026-05-29T23:19:42.023Z",
     "lastMergedAt": "2026-05-29T22:58:05.759Z",
     "mergeNotes": {
       "uclFromApi": true,

@@ -1,38 +1,427 @@
 {
   "PSG": [
-    { "name": "O. Dembélé", "position": "Attacker", "likelyStarter": true, "minutesFactor": 0.96, "xgShare": 0.24 },
-    { "name": "B. Barcola", "position": "Attacker", "likelyStarter": true, "minutesFactor": 0.92, "xgShare": 0.17 },
-    { "name": "D. Doué", "position": "Attacker", "likelyStarter": true, "minutesFactor": 0.9, "xgShare": 0.15 },
-    { "name": "K. Kvaratskhelia", "position": "Attacker", "likelyStarter": true, "minutesFactor": 0.88, "xgShare": 0.14 },
-    { "name": "G. Ramos", "position": "Attacker", "likelyStarter": false, "benchImpact": true, "minutesFactor": 0.72, "xgShare": 0.09 },
-    { "name": "V. Vitinha", "position": "Midfielder", "likelyStarter": true, "minutesFactor": 0.94, "xgShare": 0.06 },
-    { "name": "F. Ruiz", "position": "Midfielder", "likelyStarter": true, "minutesFactor": 0.92, "xgShare": 0.05 },
-    { "name": "João Neves", "position": "Midfielder", "likelyStarter": true, "minutesFactor": 0.91, "xgShare": 0.05 },
-    { "name": "W. Zaïre-Emery", "position": "Midfielder", "likelyStarter": true, "minutesFactor": 0.9, "xgShare": 0.04 },
-    { "name": "Lee Kang-In", "position": "Midfielder", "likelyStarter": false, "benchImpact": true, "minutesFactor": 0.65, "xgShare": 0.03 },
-    { "name": "Senny Mayulu", "position": "Midfielder", "likelyStarter": false, "benchImpact": true, "minutesFactor": 0.55, "xgShare": 0.03 },
-    { "name": "A. Hakimi", "position": "Defender", "likelyStarter": true, "minutesFactor": 0.93, "xgShare": 0.03 },
-    { "name": "Marquinhos", "position": "Defender", "likelyStarter": true, "minutesFactor": 0.92, "xgShare": 0.02 },
-    { "name": "W. Pacho", "position": "Defender", "likelyStarter": true, "minutesFactor": 0.91, "xgShare": 0.02 },
-    { "name": "L. Hernández", "position": "Defender", "likelyStarter": true, "minutesFactor": 0.88, "xgShare": 0.02 },
-    { "name": "Nuno Mendes", "position": "Defender", "likelyStarter": true, "minutesFactor": 0.9, "xgShare": 0.02 },
-    { "name": "G. Donnarumma", "position": "Goalkeeper", "likelyStarter": true, "minutesFactor": 1, "xgShare": 0 }
+    {
+      "name": "O. Dembélé",
+      "position": "Attacker",
+      "likelyStarter": true,
+      "minutesFactor": 0.96,
+      "xgShare": 0.24,
+      "propProfile": {
+        "shotsShare": 0.626,
+        "sotShare": 0.664,
+        "cardWeight": 0.096,
+        "foulWeight": 0.089
+      }
+    },
+    {
+      "name": "B. Barcola",
+      "position": "Attacker",
+      "likelyStarter": true,
+      "minutesFactor": 0.92,
+      "xgShare": 0.17,
+      "propProfile": {
+        "shotsShare": 0.458,
+        "sotShare": 0.482,
+        "cardWeight": 0.085,
+        "foulWeight": 0.082
+      }
+    },
+    {
+      "name": "D. Doué",
+      "position": "Attacker",
+      "likelyStarter": true,
+      "minutesFactor": 0.9,
+      "xgShare": 0.15,
+      "propProfile": {
+        "shotsShare": 0.41,
+        "sotShare": 0.43,
+        "cardWeight": 0.082,
+        "foulWeight": 0.08
+      }
+    },
+    {
+      "name": "K. Kvaratskhelia",
+      "position": "Attacker",
+      "likelyStarter": true,
+      "minutesFactor": 0.88,
+      "xgShare": 0.14,
+      "propProfile": {
+        "shotsShare": 0.386,
+        "sotShare": 0.404,
+        "cardWeight": 0.081,
+        "foulWeight": 0.079
+      }
+    },
+    {
+      "name": "G. Ramos",
+      "position": "Attacker",
+      "likelyStarter": false,
+      "benchImpact": true,
+      "minutesFactor": 0.72,
+      "xgShare": 0.09,
+      "propProfile": {
+        "shotsShare": 0.266,
+        "sotShare": 0.274,
+        "cardWeight": 0.074,
+        "foulWeight": 0.074
+      }
+    },
+    {
+      "name": "V. Vitinha",
+      "position": "Midfielder",
+      "likelyStarter": true,
+      "minutesFactor": 0.94,
+      "xgShare": 0.06,
+      "propProfile": {
+        "shotsShare": 0.151,
+        "sotShare": 0.122,
+        "cardWeight": 0.102,
+        "foulWeight": 0.102
+      }
+    },
+    {
+      "name": "F. Ruiz",
+      "position": "Midfielder",
+      "likelyStarter": true,
+      "minutesFactor": 0.92,
+      "xgShare": 0.05,
+      "propProfile": {
+        "shotsShare": 0.138,
+        "sotShare": 0.11,
+        "cardWeight": 0.1,
+        "foulWeight": 0.101
+      }
+    },
+    {
+      "name": "João Neves",
+      "position": "Midfielder",
+      "likelyStarter": true,
+      "minutesFactor": 0.91,
+      "xgShare": 0.05,
+      "propProfile": {
+        "shotsShare": 0.138,
+        "sotShare": 0.11,
+        "cardWeight": 0.1,
+        "foulWeight": 0.101
+      }
+    },
+    {
+      "name": "W. Zaïre-Emery",
+      "position": "Midfielder",
+      "likelyStarter": true,
+      "minutesFactor": 0.9,
+      "xgShare": 0.04,
+      "propProfile": {
+        "shotsShare": 0.124,
+        "sotShare": 0.098,
+        "cardWeight": 0.098,
+        "foulWeight": 0.1
+      }
+    },
+    {
+      "name": "Lee Kang-In",
+      "position": "Midfielder",
+      "likelyStarter": false,
+      "benchImpact": true,
+      "minutesFactor": 0.65,
+      "xgShare": 0.03,
+      "propProfile": {
+        "shotsShare": 0.111,
+        "sotShare": 0.086,
+        "cardWeight": 0.096,
+        "foulWeight": 0.099
+      }
+    },
+    {
+      "name": "Senny Mayulu",
+      "position": "Midfielder",
+      "likelyStarter": false,
+      "benchImpact": true,
+      "minutesFactor": 0.55,
+      "xgShare": 0.03,
+      "propProfile": {
+        "shotsShare": 0.111,
+        "sotShare": 0.086,
+        "cardWeight": 0.096,
+        "foulWeight": 0.099
+      }
+    },
+    {
+      "name": "A. Hakimi",
+      "position": "Defender",
+      "likelyStarter": true,
+      "minutesFactor": 0.93,
+      "xgShare": 0.03,
+      "propProfile": {
+        "shotsShare": 0.058,
+        "sotShare": 0.04,
+        "cardWeight": 0.129,
+        "foulWeight": 0.115
+      }
+    },
+    {
+      "name": "Marquinhos",
+      "position": "Defender",
+      "likelyStarter": true,
+      "minutesFactor": 0.92,
+      "xgShare": 0.02,
+      "propProfile": {
+        "shotsShare": 0.05,
+        "sotShare": 0.035,
+        "cardWeight": 0.126,
+        "foulWeight": 0.113
+      }
+    },
+    {
+      "name": "W. Pacho",
+      "position": "Defender",
+      "likelyStarter": true,
+      "minutesFactor": 0.91,
+      "xgShare": 0.02,
+      "propProfile": {
+        "shotsShare": 0.05,
+        "sotShare": 0.035,
+        "cardWeight": 0.126,
+        "foulWeight": 0.113
+      }
+    },
+    {
+      "name": "L. Hernández",
+      "position": "Defender",
+      "likelyStarter": true,
+      "minutesFactor": 0.88,
+      "xgShare": 0.02,
+      "propProfile": {
+        "shotsShare": 0.05,
+        "sotShare": 0.035,
+        "cardWeight": 0.126,
+        "foulWeight": 0.113
+      }
+    },
+    {
+      "name": "Nuno Mendes",
+      "position": "Defender",
+      "likelyStarter": true,
+      "minutesFactor": 0.9,
+      "xgShare": 0.02,
+      "propProfile": {
+        "shotsShare": 0.05,
+        "sotShare": 0.035,
+        "cardWeight": 0.126,
+        "foulWeight": 0.113
+      }
+    },
+    {
+      "name": "G. Donnarumma",
+      "position": "Goalkeeper",
+      "likelyStarter": true,
+      "minutesFactor": 1,
+      "xgShare": 0,
+      "propProfile": {
+        "shotsShare": 0.07,
+        "sotShare": 0.05,
+        "cardWeight": 0.09,
+        "foulWeight": 0.095
+      }
+    }
   ],
   "Arsenal": [
-    { "name": "B. Saka", "position": "Attacker", "likelyStarter": true, "minutesFactor": 0.97, "xgShare": 0.22 },
-    { "name": "V. Gyökeres", "position": "Attacker", "likelyStarter": true, "minutesFactor": 0.92, "xgShare": 0.2 },
-    { "name": "G. Martinelli", "position": "Attacker", "likelyStarter": true, "minutesFactor": 0.9, "xgShare": 0.14 },
-    { "name": "E. Eze", "position": "Attacker", "likelyStarter": true, "minutesFactor": 0.85, "xgShare": 0.12 },
-    { "name": "L. Trossard", "position": "Attacker", "likelyStarter": false, "benchImpact": true, "minutesFactor": 0.7, "xgShare": 0.08 },
-    { "name": "M. Ødegaard", "position": "Midfielder", "likelyStarter": true, "minutesFactor": 0.94, "xgShare": 0.08 },
-    { "name": "D. Rice", "position": "Midfielder", "likelyStarter": true, "minutesFactor": 0.95, "xgShare": 0.03 },
-    { "name": "M. Zubimendi", "position": "Midfielder", "likelyStarter": true, "minutesFactor": 0.93, "xgShare": 0.04 },
-    { "name": "M. Merino", "position": "Midfielder", "likelyStarter": false, "benchImpact": true, "minutesFactor": 0.75, "xgShare": 0.05 },
-    { "name": "Gabriel", "position": "Defender", "likelyStarter": true, "minutesFactor": 0.92, "xgShare": 0.04 },
-    { "name": "W. Saliba", "position": "Defender", "likelyStarter": true, "minutesFactor": 0.93, "xgShare": 0.02 },
-    { "name": "J. Timber", "position": "Defender", "likelyStarter": true, "minutesFactor": 0.9, "xgShare": 0.02 },
-    { "name": "R. Calafiori", "position": "Defender", "likelyStarter": true, "minutesFactor": 0.88, "xgShare": 0.03 },
-    { "name": "B. White", "position": "Defender", "likelyStarter": true, "minutesFactor": 0.91, "xgShare": 0.02 },
-    { "name": "D. Raya", "position": "Goalkeeper", "likelyStarter": true, "minutesFactor": 1, "xgShare": 0 }
+    {
+      "name": "B. Saka",
+      "position": "Attacker",
+      "likelyStarter": true,
+      "minutesFactor": 0.97,
+      "xgShare": 0.22,
+      "propProfile": {
+        "shotsShare": 0.578,
+        "sotShare": 0.612,
+        "cardWeight": 0.093,
+        "foulWeight": 0.087
+      }
+    },
+    {
+      "name": "V. Gyökeres",
+      "position": "Attacker",
+      "likelyStarter": true,
+      "minutesFactor": 0.92,
+      "xgShare": 0.2,
+      "propProfile": {
+        "shotsShare": 0.53,
+        "sotShare": 0.56,
+        "cardWeight": 0.09,
+        "foulWeight": 0.085
+      }
+    },
+    {
+      "name": "G. Martinelli",
+      "position": "Attacker",
+      "likelyStarter": true,
+      "minutesFactor": 0.9,
+      "xgShare": 0.14,
+      "propProfile": {
+        "shotsShare": 0.386,
+        "sotShare": 0.404,
+        "cardWeight": 0.081,
+        "foulWeight": 0.079
+      }
+    },
+    {
+      "name": "E. Eze",
+      "position": "Attacker",
+      "likelyStarter": true,
+      "minutesFactor": 0.85,
+      "xgShare": 0.12,
+      "propProfile": {
+        "shotsShare": 0.338,
+        "sotShare": 0.352,
+        "cardWeight": 0.078,
+        "foulWeight": 0.077
+      }
+    },
+    {
+      "name": "L. Trossard",
+      "position": "Attacker",
+      "likelyStarter": false,
+      "benchImpact": true,
+      "minutesFactor": 0.7,
+      "xgShare": 0.08,
+      "propProfile": {
+        "shotsShare": 0.242,
+        "sotShare": 0.248,
+        "cardWeight": 0.072,
+        "foulWeight": 0.073
+      }
+    },
+    {
+      "name": "M. Ødegaard",
+      "position": "Midfielder",
+      "likelyStarter": true,
+      "minutesFactor": 0.94,
+      "xgShare": 0.08,
+      "propProfile": {
+        "shotsShare": 0.178,
+        "sotShare": 0.146,
+        "cardWeight": 0.106,
+        "foulWeight": 0.105
+      }
+    },
+    {
+      "name": "D. Rice",
+      "position": "Midfielder",
+      "likelyStarter": true,
+      "minutesFactor": 0.95,
+      "xgShare": 0.03,
+      "propProfile": {
+        "shotsShare": 0.111,
+        "sotShare": 0.086,
+        "cardWeight": 0.096,
+        "foulWeight": 0.099
+      }
+    },
+    {
+      "name": "M. Zubimendi",
+      "position": "Midfielder",
+      "likelyStarter": true,
+      "minutesFactor": 0.93,
+      "xgShare": 0.04,
+      "propProfile": {
+        "shotsShare": 0.124,
+        "sotShare": 0.098,
+        "cardWeight": 0.098,
+        "foulWeight": 0.1
+      }
+    },
+    {
+      "name": "M. Merino",
+      "position": "Midfielder",
+      "likelyStarter": false,
+      "benchImpact": true,
+      "minutesFactor": 0.75,
+      "xgShare": 0.05,
+      "propProfile": {
+        "shotsShare": 0.138,
+        "sotShare": 0.11,
+        "cardWeight": 0.1,
+        "foulWeight": 0.101
+      }
+    },
+    {
+      "name": "Gabriel",
+      "position": "Defender",
+      "likelyStarter": true,
+      "minutesFactor": 0.92,
+      "xgShare": 0.04,
+      "propProfile": {
+        "shotsShare": 0.065,
+        "sotShare": 0.045,
+        "cardWeight": 0.132,
+        "foulWeight": 0.116
+      }
+    },
+    {
+      "name": "W. Saliba",
+      "position": "Defender",
+      "likelyStarter": true,
+      "minutesFactor": 0.93,
+      "xgShare": 0.02,
+      "propProfile": {
+        "shotsShare": 0.05,
+        "sotShare": 0.035,
+        "cardWeight": 0.126,
+        "foulWeight": 0.113
+      }
+    },
+    {
+      "name": "J. Timber",
+      "position": "Defender",
+      "likelyStarter": true,
+      "minutesFactor": 0.9,
+      "xgShare": 0.02,
+      "propProfile": {
+        "shotsShare": 0.05,
+        "sotShare": 0.035,
+        "cardWeight": 0.126,
+        "foulWeight": 0.113
+      }
+    },
+    {
+      "name": "R. Calafiori",
+      "position": "Defender",
+      "likelyStarter": true,
+      "minutesFactor": 0.88,
+      "xgShare": 0.03,
+      "propProfile": {
+        "shotsShare": 0.058,
+        "sotShare": 0.04,
+        "cardWeight": 0.129,
+        "foulWeight": 0.115
+      }
+    },
+    {
+      "name": "B. White",
+      "position": "Defender",
+      "likelyStarter": true,
+      "minutesFactor": 0.91,
+      "xgShare": 0.02,
+      "propProfile": {
+        "shotsShare": 0.05,
+        "sotShare": 0.035,
+        "cardWeight": 0.126,
+        "foulWeight": 0.113
+      }
+    },
+    {
+      "name": "D. Raya",
+      "position": "Goalkeeper",
+      "likelyStarter": true,
+      "minutesFactor": 1,
+      "xgShare": 0,
+      "propProfile": {
+        "shotsShare": 0.07,
+        "sotShare": 0.05,
+        "cardWeight": 0.09,
+        "foulWeight": 0.095
+      }
+    }
   ]
 }

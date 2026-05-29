@@ -39,6 +39,7 @@ export function buildAnalystBundle({ prediction = null, polymarket = null, stats
           goalscorers: stats.goalscorers,
           assisters: stats.assisters,
           bettingCategories: stats.bettingCategories,
+          playerProps: stats.playerProps,
           rosterSeason: stats.rosterSeason,
           dataSources: stats.dataSources
         }
@@ -59,8 +60,80 @@ export async function enrichAnalystBundle(bundle) {
       awayTeam,
       neutralVenue: neutralVenue !== false
     });
-    return { ...bundle, stats: { predictedStats: stats.predictedStats, goalscorers: stats.goalscorers, dataSources: stats.dataSources } };
+    return {
+      ...bundle,
+      stats: {
+        predictedStats: stats.predictedStats,
+        goalscorers: stats.goalscorers,
+        assisters: stats.assisters,
+        playerProps: stats.playerProps,
+        rosterSeason: stats.rosterSeason,
+        dataSources: stats.dataSources
+      }
+    };
   } catch {
     return bundle;
   }
+}
+
+function topPlayerPropLines(player, maxLines = 3) {
+  return (player.lines ?? []).slice(0, maxLines).map((l) => ({
+    line: l.line,
+    overPct: l.overPct
+  }));
+}
+
+/** Slim context for LLM — full stats JSON exceeds Groq on-demand TPM limits. */
+export function compactAnalystBundle(bundle) {
+  if (!bundle) return null;
+
+  const stats = bundle.stats;
+  const playerGoals = stats?.playerProps?.categories?.find((c) => c.id === 'playerGoals')?.players ?? [];
+
+  return {
+    fixture: bundle.fixture,
+    probabilities: bundle.probabilities,
+    modelProbabilities: bundle.modelProbabilities,
+    marketProbabilities: bundle.marketProbabilities,
+    knockout: bundle.knockout ?? null,
+    scorelines: (bundle.scorelines ?? []).slice(0, 7),
+    verdict: bundle.verdict,
+    model: bundle.model,
+    blend: bundle.blend,
+    polymarket: bundle.polymarket
+      ? {
+          found: bundle.polymarket.found,
+          source: bundle.polymarket.source,
+          marketQuestion: bundle.polymarket.marketQuestion,
+          implied: bundle.polymarket.implied ?? bundle.marketProbabilities
+        }
+      : null,
+    stats: stats
+      ? {
+          matchTotals: stats.predictedStats?.match ?? null,
+          home: stats.predictedStats?.home ?? null,
+          away: stats.predictedStats?.away ?? null,
+          goalscorers: (stats.goalscorers ?? []).slice(0, 10),
+          assisters: (stats.assisters ?? []).slice(0, 8),
+          playerProps: (stats.playerProps?.categories ?? []).map((cat) => ({
+            id: cat.id,
+            label: cat.label,
+            players: (cat.players ?? []).slice(0, 6).map((p) => ({
+              name: p.name,
+              team: p.team,
+              expected: p.expected,
+              anytimePct: p.anytimePct,
+              lines: topPlayerPropLines(p)
+            }))
+          })),
+          rosterSeason: stats.rosterSeason
+        }
+      : null,
+    dataSources: bundle.dataSources
+      ? {
+          home: bundle.dataSources.home?.source,
+          away: bundle.dataSources.away?.source
+        }
+      : null
+  };
 }

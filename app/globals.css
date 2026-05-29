@@ -564,6 +564,87 @@ body {
   gap: 16px;
 }
 
+.sectionDivider {
+  margin-top: 8px;
+}
+
+.sectionTitle {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ucl-white);
+}
+
+.sectionHint {
+  margin: 6px 0 0;
+}
+
+.playerPropCard {
+  gap: 12px;
+}
+
+.playerPropTable {
+  font-size: 12px;
+  border: 1px solid var(--hair);
+  border-radius: var(--r);
+  overflow: hidden;
+}
+
+.playerPropHead,
+.playerPropRow {
+  display: grid;
+  grid-template-columns: 1fr 56px 88px;
+  gap: 8px;
+  padding: 10px 12px;
+  align-items: center;
+}
+
+.playerPropHead {
+  background: rgba(255, 255, 255, 0.04);
+  font-family: var(--font-serif);
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--ucl-silver);
+  font-weight: 600;
+}
+
+.playerPropRow:nth-child(even) {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.playerPropName {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.playerPropExp,
+.playerPropLine {
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.playerPropLinesBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.playerPropLinesGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.playerPropLinesTitle {
+  font-size: 12px;
+}
+
 .bettingCard {
   display: flex;
   flex-direction: column;

@@ -113,7 +113,8 @@ export function buildTeamProfileFromBundle(bundle) {
     likelyStarter: Boolean(p.likelyStarter),
     benchImpact: Boolean(p.benchImpact),
     minutesFactor: p.minutesFactor ?? 0.8,
-    xgShare: p.xgShare ?? 0.05
+    xgShare: p.xgShare ?? 0.05,
+    propProfile: p.propProfile ?? null
   }));
 
   return {

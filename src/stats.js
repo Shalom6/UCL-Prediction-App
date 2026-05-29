@@ -1,4 +1,5 @@
 import { buildBettingCategories } from './bettingStats.js';
+import { buildPlayerProps } from './playerProps.js';
 import { buildPrediction, isGoalkeeperPlayer } from './predictor.js';
 import { getFixtureContext, getTeamProfiles } from './sampleData.js';
 
@@ -153,6 +154,13 @@ export function buildStatsResponse(query) {
     lambdas: { home: lh, away: la }
   });
 
+  const playerProps = buildPlayerProps({
+    home,
+    away,
+    predictedStats,
+    lambdas: { home: lh, away: la }
+  });
+
   const matchFromCats = {
     goals: round(lh + la, 2),
     shots: round(predictedStats.home.shots + predictedStats.away.shots, 1),
@@ -168,6 +176,7 @@ export function buildStatsResponse(query) {
     fixture: prediction.fixture,
     predictedStats: { ...predictedStats, match: matchFromCats },
     bettingCategories,
+    playerProps,
     goalscorers: allScorers.length ? allScorers : prediction.topScorers,
     assisters: topAssists,
     rosterSeason: '2025-26',

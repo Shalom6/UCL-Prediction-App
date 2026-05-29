@@ -97,6 +97,56 @@ function BettingCategoryCard({ category, homeTeam, awayTeam }) {
   );
 }
 
+function PlayerPropCategoryCard({ category }) {
+  return (
+    <section className="glass card bettingCard playerPropCard">
+      <div className="bettingCardHead">
+        <div>
+          <div className="cardTitle">{category.label}</div>
+          <div className="marketHint">{category.marketTags}</div>
+        </div>
+      </div>
+
+      <div className="playerPropTable">
+        <div className="playerPropHead">
+          <span>Player</span>
+          <span>Exp.</span>
+          <span>Key line</span>
+        </div>
+        {category.players.map((row) => {
+          const mainLine = row.lines?.[0];
+          const displayPct = row.anytimePct ?? mainLine?.overPct;
+          return (
+            <div key={`${row.team}-${row.name}`} className="playerPropRow">
+              <span className="playerPropName">
+                {row.name} <span className="muted">({row.team})</span>
+              </span>
+              <span className="playerPropExp">{row.expected}</span>
+              <span className="playerPropLine">
+                {mainLine ? `O${mainLine.line} ${displayPct}%` : `${displayPct ?? '—'}%`}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+
+      {category.players.some((p) => p.lines?.length > 1) ? (
+        <div className="playerPropLinesBlock">
+          <div className="sourceLabel">Modelled Over / Under</div>
+          {category.players.slice(0, 5).map((row) => (
+            <div key={`lines-${row.team}-${row.name}`} className="playerPropLinesGroup">
+              <div className="playerPropLinesTitle">
+                {row.name} <span className="muted">({row.team})</span>
+              </div>
+              <OuTable lines={row.lines} />
+            </div>
+          ))}
+        </div>
+      ) : null}
+    </section>
+  );
+}
+
 function PlayerList({ title, rows, emptyLabel, hint }) {
   return (
     <section className="glass card">
@@ -161,6 +211,7 @@ export default function StatsPanel({ fixture }) {
   }, [homeTeam, awayTeam, neutralVenue]);
 
   const categories = data?.bettingCategories ?? [];
+  const playerPropCategories = data?.playerProps?.categories ?? [];
   const scorers = data?.goalscorers ?? [];
   const assisters = data?.assisters ?? [];
   const matchTotals = data?.predictedStats?.match;
@@ -225,6 +276,26 @@ export default function StatsPanel({ fixture }) {
           </div>
         </section>
       ) : null}
+
+      {playerPropCategories.length ? (
+        <>
+          <header className="sectionDivider">
+            <h2 className="sectionTitle">Player props</h2>
+            <p className="muted small sectionHint">
+              Per-player projections from squad shares, minutes, and team totals ({rosterSeason} rosters).
+            </p>
+          </header>
+          <div className="bettingGrid playerPropsGrid">
+            {playerPropCategories.map((cat) => (
+              <PlayerPropCategoryCard key={cat.id} category={cat} />
+            ))}
+          </div>
+        </>
+      ) : null}
+
+      <header className="sectionDivider">
+        <h2 className="sectionTitle">Match props</h2>
+      </header>
 
       <div className="bettingGrid">
         {categories.map((cat) => (

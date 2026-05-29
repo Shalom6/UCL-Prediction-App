@@ -1,3 +1,4 @@
+import { compactAnalystBundle } from './analystContext.js';
 import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -28,12 +29,12 @@ Guidelines:
 4. For completely unrelated topics (homework, code, other sports), briefly redirect to the final or prediction markets.
 5. Structure longer answers with short paragraphs or bullets. Be direct and confident but not reckless.
 6. When discussing betting/Polymarket, note uncertainty; this is not financial advice.
-7. If asked about a player, check goalscorer list and roster-related data in context first.
+7. If asked about a player, check playerProps categories, goalscorer list, and roster propProfile data in context first.
 
 ${hasPrediction ? 'Prediction data is loaded — use it.' : 'No prediction run yet — user should press Predict for full numbers.'}
 
 APP_CONTEXT:
-${JSON.stringify(bundle ?? {}, null, 2)}`;
+${JSON.stringify(compactAnalystBundle(bundle) ?? {}, null, 2)}`;
 }
 
 function trimHistory(history, maxTurns = 10) {

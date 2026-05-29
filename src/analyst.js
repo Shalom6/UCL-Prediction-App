@@ -61,6 +61,21 @@ export function buildRuleBasedAnswer({ question, bundle }) {
   }
 
   if (q.includes('scorer') || q.includes('goal') || q.includes('dembele') || q.includes('saka') || q.includes('score')) {
+    const playerGoals = bundle?.stats?.playerProps?.categories?.find((c) => c.id === 'playerGoals')?.players ?? [];
+    const playerMatch =
+      playerGoals.find((p) => q.includes(String(p.name).split(' ').pop()?.toLowerCase() ?? '')) ??
+      playerGoals.find((p) => q.includes(String(p.name).toLowerCase().slice(0, 4)));
+
+    if (playerMatch) {
+      const o05 = playerMatch.lines?.find((l) => l.line === 0.5);
+      const o15 = playerMatch.lines?.find((l) => l.line === 1.5);
+      blocks.push(
+        `${playerMatch.name} (${playerMatch.team}) — expected goals ${playerMatch.expected ?? '—'}.`,
+        o05 ? `Anytime scorer (O0.5): ${pct(o05.overPct)}.` : '',
+        o15 ? `2+ goals (O1.5): ${pct(o15.overPct)} · Under ${pct(o15.underPct)}.` : ''
+      );
+    }
+
     if (scorers.length) {
       blocks.push(
         'Anytime scorer (model):\n' +
