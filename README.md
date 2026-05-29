@@ -23,6 +23,22 @@ Open:
 - Frontend: `http://localhost:3000`
 - Backend: `http://localhost:4001/api/health`
 
+## Polymarket integration
+
+Add your Polymarket Data API key to `.env.local` (repo root or parent `UCL_predictions/.env.local`):
+
+```env
+UCL_prediction_api=pk_live_your_key_here
+```
+
+Supported routes:
+
+- `GET /api/polymarket?home=PSG&away=Arsenal` — live market odds
+- `POST /api/analyst` — Market Analyst (model + Polymarket context)
+- `POST /api/predict` — prediction engine (proxied to Express on port 4001)
+
+The UI has **Setup** and **Results & Market Analyst** tabs. Press **Predict** to load Polymarket odds, run the model, and open the analyst view.
+
 ## Make it “most accurate”
 
 Right now, team profiles are placeholders in `src/sampleData.js`.
