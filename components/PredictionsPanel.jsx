@@ -212,6 +212,14 @@ export default function PredictionsPanel({ onPredictionUpdate }) {
               ? `λ ${data.model.lambda.home} vs ${data.model.lambda.away} · ${data.model.note}`
               : 'Loading model…'}
           </p>
+          {data?.dataSources?.teams?.home ? (
+            <p className="muted small">
+              Data: {data.dataSources.teams.home.season} season + {data.dataSources.teams.home.era} era (
+              {Math.round((data.dataSources.catalog?.blendWeights?.historical ?? 0.2) * 100)}/
+              {Math.round((data.dataSources.catalog?.blendWeights?.season2025_26 ?? 0.65) * 100)}/
+              {Math.round((data.dataSources.catalog?.blendWeights?.formLast10 ?? 0.15) * 100)} blend)
+            </p>
+          ) : null}
         </section>
 
         <section className="glass card">

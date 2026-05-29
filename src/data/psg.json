@@ -1,0 +1,232 @@
+{
+  "name": "PSG",
+  "aliases": [
+    "PSG",
+    "Paris Saint-Germain",
+    "Paris"
+  ],
+  "historical": {
+    "era": "2000-2026",
+    "uclSeasons": 22,
+    "uclFinals": 2,
+    "uclWins": 0,
+    "avgGoalsForUcl": 1.72,
+    "avgGoalsAgainstUcl": 1.08,
+    "avgPossession": 54,
+    "knockoutWinRate": 0.54,
+    "finalsWinRate": 0,
+    "note": "Long-run UCL-era prior (2000-2026)"
+  },
+  "season2025_26": {
+    "label": "2025-26",
+    "ucl": {
+      "played": 13,
+      "wins": 9,
+      "draws": 2,
+      "losses": 2,
+      "goalsFor": 28,
+      "goalsAgainst": 12,
+      "xgFor": 26.4,
+      "xgAgainst": 13.1,
+      "shotsPerMatch": 15.2,
+      "shotsOnTargetPerMatch": 5.4,
+      "cornersPerMatch": 6.1
+    },
+    "league": {
+      "competition": "Ligue 1",
+      "played": 36,
+      "goalsFor": 78,
+      "goalsAgainst": 28,
+      "pointsPerGame": 2.28
+    },
+    "formLast10": [
+      {
+        "result": "W",
+        "goalsFor": 3,
+        "goalsAgainst": 1,
+        "competition": "UCL"
+      },
+      {
+        "result": "W",
+        "goalsFor": 2,
+        "goalsAgainst": 0,
+        "competition": "Ligue 1"
+      },
+      {
+        "result": "D",
+        "goalsFor": 1,
+        "goalsAgainst": 1,
+        "competition": "UCL"
+      },
+      {
+        "result": "W",
+        "goalsFor": 4,
+        "goalsAgainst": 1,
+        "competition": "Ligue 1"
+      },
+      {
+        "result": "W",
+        "goalsFor": 2,
+        "goalsAgainst": 1,
+        "competition": "UCL"
+      },
+      {
+        "result": "W",
+        "goalsFor": 2,
+        "goalsAgainst": 0,
+        "competition": "Ligue 1"
+      },
+      {
+        "result": "L",
+        "goalsFor": 0,
+        "goalsAgainst": 1,
+        "competition": "UCL"
+      },
+      {
+        "result": "W",
+        "goalsFor": 3,
+        "goalsAgainst": 2,
+        "competition": "Ligue 1"
+      },
+      {
+        "result": "W",
+        "goalsFor": 1,
+        "goalsAgainst": 0,
+        "competition": "UCL"
+      },
+      {
+        "result": "D",
+        "goalsFor": 2,
+        "goalsAgainst": 2,
+        "competition": "Ligue 1"
+      }
+    ],
+    "roster": [
+      {
+        "name": "O. Dembélé",
+        "position": "Attacker",
+        "likelyStarter": true,
+        "minutesFactor": 0.96,
+        "xgShare": 0.24
+      },
+      {
+        "name": "B. Barcola",
+        "position": "Attacker",
+        "likelyStarter": true,
+        "minutesFactor": 0.92,
+        "xgShare": 0.17
+      },
+      {
+        "name": "D. Doué",
+        "position": "Attacker",
+        "likelyStarter": true,
+        "minutesFactor": 0.9,
+        "xgShare": 0.15
+      },
+      {
+        "name": "K. Kvaratskhelia",
+        "position": "Attacker",
+        "likelyStarter": true,
+        "minutesFactor": 0.88,
+        "xgShare": 0.14
+      },
+      {
+        "name": "G. Ramos",
+        "position": "Attacker",
+        "likelyStarter": false,
+        "benchImpact": true,
+        "minutesFactor": 0.72,
+        "xgShare": 0.09
+      },
+      {
+        "name": "V. Vitinha",
+        "position": "Midfielder",
+        "likelyStarter": true,
+        "minutesFactor": 0.94,
+        "xgShare": 0.06
+      },
+      {
+        "name": "F. Ruiz",
+        "position": "Midfielder",
+        "likelyStarter": true,
+        "minutesFactor": 0.92,
+        "xgShare": 0.05
+      },
+      {
+        "name": "João Neves",
+        "position": "Midfielder",
+        "likelyStarter": true,
+        "minutesFactor": 0.91,
+        "xgShare": 0.05
+      },
+      {
+        "name": "W. Zaïre-Emery",
+        "position": "Midfielder",
+        "likelyStarter": true,
+        "minutesFactor": 0.9,
+        "xgShare": 0.04
+      },
+      {
+        "name": "Lee Kang-In",
+        "position": "Midfielder",
+        "likelyStarter": false,
+        "benchImpact": true,
+        "minutesFactor": 0.65,
+        "xgShare": 0.03
+      },
+      {
+        "name": "Senny Mayulu",
+        "position": "Midfielder",
+        "likelyStarter": false,
+        "benchImpact": true,
+        "minutesFactor": 0.55,
+        "xgShare": 0.03
+      },
+      {
+        "name": "A. Hakimi",
+        "position": "Defender",
+        "likelyStarter": true,
+        "minutesFactor": 0.93,
+        "xgShare": 0.03
+      },
+      {
+        "name": "Marquinhos",
+        "position": "Defender",
+        "likelyStarter": true,
+        "minutesFactor": 0.92,
+        "xgShare": 0.02
+      },
+      {
+        "name": "W. Pacho",
+        "position": "Defender",
+        "likelyStarter": true,
+        "minutesFactor": 0.91,
+        "xgShare": 0.02
+      },
+      {
+        "name": "L. Hernández",
+        "position": "Defender",
+        "likelyStarter": true,
+        "minutesFactor": 0.88,
+        "xgShare": 0.02
+      },
+      {
+        "name": "Nuno Mendes",
+        "position": "Defender",
+        "likelyStarter": true,
+        "minutesFactor": 0.9,
+        "xgShare": 0.02
+      },
+      {
+        "name": "G. Donnarumma",
+        "position": "Goalkeeper",
+        "likelyStarter": true,
+        "minutesFactor": 1,
+        "xgShare": 0
+      }
+    ],
+    "importSource": "bundled-curated-2025-26",
+    "lastImportedAt": null,
+    "lastSyncedAt": "2026-05-29T22:39:55.780Z"
+  }
+}

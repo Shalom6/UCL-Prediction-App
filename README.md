@@ -2,14 +2,46 @@
 
 Everything runs from the repo root:
 
-- Next.js (React) frontend in `app/`
-- Express API in `server.js`
-- Prediction model files in `src/`
+- **Next.js UI** in `app/` and `components/`
+- **Express API** in `server.js`
+- **Model & integrations** in `src/`
 
-- Win/draw/win probabilities (Poisson-goals model)
-- Most likely scorelines
-- Expected shots / shots on target / corners / possession / xG
-- Anytime goalscorer probabilities (xG share allocation)
+## Project structure
+
+```
+app/
+  layout.jsx          # Root layout + global CSS
+  page.jsx            # Tabs: Predictions | Stats | Market Analyst
+  globals.css         # App styles (no Tailwind)
+  api/
+    predictions/      # POST — blended predictions engine
+    polymarket/       # GET — live Polymarket odds
+    analyst/          # POST — market analyst Q&A
+    stats/            # GET — match stats (Module 2 API)
+    predict/          # POST — proxy to Express predict
+
+components/
+  PredictionsPanel.jsx
+  AnalystPanel.jsx
+
+src/
+  predictor.js        # Poisson model
+  predictionsEngine.js
+  polymarket.js
+  analyst.js
+  stats.js
+  teamProfiles.js     # historical (2000-2026) + 2025-26 blend
+  sampleData.js
+  data/
+    historical-index.json
+    psg.json
+    arsenal.json
+
+scripts/
+  sync-bundled-data.mjs        # sync curated rosters into team JSON (no API)
+
+server.js             # Express on port 4001
+```
 
 ## Run locally
 
@@ -25,28 +57,50 @@ Open:
 
 ## Polymarket integration
 
-Add your Polymarket Data API key to `.env.local` (repo root or parent `UCL_predictions/.env.local`):
+Add your Polymarket Data API key to `.env.local` (repo root):
 
 ```env
-UCL_prediction_api=pk_live_your_key_here
+POLYMARKET_DATA_API_KEY=pk_live_your_key_here
 ```
 
-Supported routes:
+The app also falls back to the public Polymarket Gamma API when needed.
 
-- `GET /api/polymarket?home=PSG&away=Arsenal` — live market odds
-- `POST /api/analyst` — Market Analyst (model + Polymarket context)
-- `POST /api/predict` — prediction engine (proxied to Express on port 4001)
+## Team data (historical + 2025-26)
 
-The UI has **Setup** and **Results & Market Analyst** tabs. Press **Predict** to load Polymarket odds, run the model, and open the analyst view.
+Profiles blend **UCL era baselines (2000-2026)**, **2025-26 season stats**, and **last-10 form**, with **current rosters** for goalscorer models.
 
-## Make it “most accurate”
+| Input | Weight | File |
+|-------|--------|------|
+| Historical UCL era | 20% | `src/data/*.json` → `historical` |
+| 2025-26 UCL season | 65% | `season2025_26.ucl` |
+| Last 10 matches | 15% | `season2025_26.formLast10` |
 
-Right now, team profiles are placeholders in `src/sampleData.js`.
+All team stats, form, and rosters live in **`src/data/`** (curated JSON — no external football API).
 
-To upgrade accuracy, replace them with real aggregates from a stats API:
+After editing `src/data/rosters-2025-26.json` or `psg.json` / `arsenal.json`:
 
-- UCL season-to-date (shots, corners, xG, goals for/against)
-- Recent form (last 5–10 matches)
-- Injuries/lineups (day-of)
-- Blend your model with bookmaker implied odds (send `market` to `/api/predict`)
+```bash
+npm run sync:data
+```
 
+## API routes
+
+| Route | Method | Description |
+|-------|--------|-------------|
+| `/api/predictions` | POST | Win probs, scorelines, verdict (+ Polymarket blend) |
+| `/api/polymarket` | GET | Live market odds |
+| `/api/analyst` | POST | Market analyst (free Groq AI if `GROQ_API_KEY` set, else rules) |
+| `/api/stats` | GET | Expected stats & goalscorers |
+| `/api/predict` | POST | Full predict payload (Express proxy) |
+
+## UI tabs
+
+**Predictions** — run the engine and view probabilities.  
+**Stats** — expected match stats, fouls, and goalscorer probabilities (`/api/stats`).  
+**Market Analyst** — free [Groq](https://console.groq.com/) AI when `GROQ_API_KEY` is set; else rule-based fallback.
+
+```env
+GROQ_API_KEY=gsk_...
+```
+
+Styling uses `app/globals.css` only (custom glass UI).

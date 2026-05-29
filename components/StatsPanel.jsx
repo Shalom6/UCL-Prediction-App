@@ -1,0 +1,261 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+
+function StatRow({ label, aName, a, bName, b, max }) {
+  const av = Number(a);
+  const bv = Number(b);
+  const denom = max ?? Math.max(av, bv, 1);
+  const ap = (av / denom) * 100;
+  const bp = (bv / denom) * 100;
+
+  return (
+    <div className="statRow">
+      <div className="statHead">
+        <div className="statLabel">{label}</div>
+        <div className="statVals">
+          <span className="tag">{aName}</span> {a} <span className="dot">·</span> <span className="tag">{bName}</span> {b}
+        </div>
+      </div>
+      <div className="statBar" role="presentation">
+        <div className="fill a" style={{ width: `${ap}%` }} />
+        <div className="fill b" style={{ width: `${bp}%` }} />
+      </div>
+    </div>
+  );
+}
+
+function OuTable({ lines }) {
+  if (!lines?.length) return null;
+  return (
+    <div className="ouTable">
+      <div className="ouHead">
+        <span>Line</span>
+        <span>Over %</span>
+        <span>Under %</span>
+      </div>
+      {lines.map((row) => (
+        <div key={row.line} className="ouRow">
+          <span className="ouLine">O/U {row.line}</span>
+          <span className="ouOver">{row.overPct}%</span>
+          <span className="ouUnder">{row.underPct}%</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function BettingCategoryCard({ category, homeTeam, awayTeam }) {
+  return (
+    <section className="glass card bettingCard">
+      <div className="bettingCardHead">
+        <div>
+          <div className="cardTitle">{category.label}</div>
+          <div className="bet365Hint">{category.bet365Examples}</div>
+        </div>
+        {category.match ? (
+          <div className="matchExpected">
+            <span className="muted small">Match exp.</span>
+            <strong>
+              {category.match.expected} {category.match.unit}
+            </strong>
+          </div>
+        ) : null}
+      </div>
+
+      <div className="statsGrid">
+        {category.team.map((row) => (
+          <StatRow
+            key={row.key}
+            label={row.label}
+            aName={homeTeam}
+            a={row.home}
+            bName={awayTeam}
+            b={row.away}
+          />
+        ))}
+      </div>
+
+      {category.lines?.length ? (
+        <div className="ouBlock">
+          <div className="sourceLabel">Modelled Over / Under (match)</div>
+          <OuTable lines={category.lines} />
+        </div>
+      ) : null}
+
+      {category.extras?.length ? (
+        <ul className="extrasList">
+          {category.extras.map((ex) => (
+            <li key={ex.label}>
+              <span>{ex.label}</span>
+              <span className="right">{ex.valuePct}%</span>
+            </li>
+          ))}
+        </ul>
+      ) : null}
+    </section>
+  );
+}
+
+function PlayerList({ title, rows, emptyLabel, hint }) {
+  return (
+    <section className="glass card">
+      <div className="cardTitle">{title}</div>
+      {rows.length ? (
+        <ol className="list">
+          {rows.map((row) => (
+            <li key={`${row.team}-${row.name}`}>
+              <div className="rowLine">
+                <span>
+                  {row.name} <span className="muted">({row.team})</span>
+                </span>
+                <span className="right">{row.probability.toFixed(1)}%</span>
+              </div>
+            </li>
+          ))}
+        </ol>
+      ) : (
+        <p className="muted">{emptyLabel}</p>
+      )}
+      {hint ? <p className="muted small">{hint}</p> : null}
+    </section>
+  );
+}
+
+export default function StatsPanel({ fixture }) {
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const homeTeam = fixture?.homeTeam ?? 'PSG';
+  const awayTeam = fixture?.awayTeam ?? 'Arsenal';
+  const neutralVenue = fixture?.neutralVenue !== false;
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function load() {
+      setLoading(true);
+      setError('');
+      try {
+        const qs = new URLSearchParams({
+          homeTeam,
+          awayTeam,
+          neutralVenue: neutralVenue ? '1' : '0'
+        });
+        const res = await fetch(`/api/stats?${qs}`, { cache: 'no-store' });
+        const json = await res.json();
+        if (!res.ok) throw new Error(json?.error || json?.detail || 'Failed to load stats');
+        if (!cancelled) setData(json);
+      } catch (e) {
+        if (!cancelled) setError(e.message);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+
+    load();
+    return () => {
+      cancelled = true;
+    };
+  }, [homeTeam, awayTeam, neutralVenue]);
+
+  const categories = data?.bettingCategories ?? [];
+  const scorers = data?.goalscorers ?? [];
+  const assisters = data?.assisters ?? [];
+  const matchTotals = data?.predictedStats?.match;
+  const rosterSeason = data?.rosterSeason ?? '2025-26';
+
+  return (
+    <section className="statsEngine">
+      <header className="nav glass">
+        <div className="navLeft">
+          <div className="appIcon" aria-hidden="true">
+            <div className="appIconInner">📊</div>
+          </div>
+          <div className="navTitleWrap">
+            <div className="navTitle">Bet365-style stats</div>
+            <div className="navSubtitle">
+              {fixture
+                ? `${fixture.competition ?? 'UEFA Champions League'} · ${homeTeam} vs ${awayTeam}`
+                : `${homeTeam} vs ${awayTeam} · run Predict to sync fixture`}
+            </div>
+          </div>
+        </div>
+      </header>
+
+      {!fixture ? (
+        <section className="glass card infoCard">
+          <p className="muted small">
+            Showing default teams. Open <strong>Predictions</strong> and press <strong>Predict</strong> to sync
+            teams with your selection.
+          </p>
+        </section>
+      ) : null}
+
+      {error ? <div className="error glass card">{error}</div> : null}
+
+      <section className="glass card infoCard">
+        <p className="muted small" style={{ margin: 0 }}>
+          Model estimates (Poisson + {rosterSeason} rosters). O/U % are not live Bet365 prices. Player lists use
+          curated 2025-26 squads (Dembélé, Kvara, Gyökeres, etc.).
+        </p>
+      </section>
+
+      {loading && !data ? <section className="glass card"><p className="muted">Loading stats…</p></section> : null}
+
+      {matchTotals ? (
+        <section className="glass card matchTotalsCard">
+          <div className="cardTitle">Match totals (expected)</div>
+          <div className="totalsGrid">
+            {[
+              ['Goals', matchTotals.goals],
+              ['Shots', matchTotals.shots],
+              ['SOT', matchTotals.shotsOnTarget],
+              ['Corners', matchTotals.corners],
+              ['Fouls', matchTotals.fouls],
+              ['Offsides', matchTotals.offsides],
+              ['Yellow cards', matchTotals.yellowCards],
+              ['Booking pts', matchTotals.bookingPoints]
+            ].map(([label, val]) => (
+              <div key={label} className="totalChip">
+                <span className="muted small">{label}</span>
+                <strong>{val}</strong>
+              </div>
+            ))}
+          </div>
+        </section>
+      ) : null}
+
+      <div className="bettingGrid">
+        {categories.map((cat) => (
+          <BettingCategoryCard key={cat.id} category={cat} homeTeam={homeTeam} awayTeam={awayTeam} />
+        ))}
+      </div>
+
+      <div className="grid statsGridLayout">
+        <PlayerList
+          title="Goalscorers"
+          rows={scorers}
+          emptyLabel={loading ? 'Loading…' : 'No scorer data.'}
+          hint="Anytime scorer — % chance of at least one goal."
+        />
+        <PlayerList
+          title="Most likely assists"
+          rows={assisters}
+          emptyLabel={loading ? 'Loading…' : 'No assist data.'}
+          hint="At least one assist — mids weighted higher."
+        />
+      </div>
+
+      {data?.dataSources?.home ? (
+        <p className="muted small footer">
+          Data: {data.dataSources.home.source} · roster {rosterSeason}
+          {data.dataSources.home.uclDataQuality === 'ucl-goals-repaired'
+            ? ' · UCL goals repaired'
+            : ''}
+        </p>
+      ) : null}
+    </section>
+  );
+}

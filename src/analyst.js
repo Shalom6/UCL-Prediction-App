@@ -1,3 +1,6 @@
+import { buildAnalystBundle, enrichAnalystBundle } from './analystContext.js';
+import { GROQ_MODEL, askGroq, getGroqApiKey } from './llmAnalyst.js';
+
 function pct(n) {
   if (typeof n !== 'number' || !Number.isFinite(n)) return '—';
   return `${n.toFixed(1)}%`;
@@ -8,93 +11,176 @@ function format1x2(label, p, home, away) {
   return `${label}: ${home} ${pct(p.homeWin)}, Draw ${pct(p.draw)}, ${away} ${pct(p.awayWin)}.`;
 }
 
-export function buildAnalystAnswer({ question, context, polymarket }) {
+/** Richer fallback when Groq is unavailable — handles more question types via keyword scan. */
+export function buildRuleBasedAnswer({ question, bundle }) {
   const q = String(question || '').toLowerCase();
-  const home = context?.fixture?.homeTeam ?? 'Home';
-  const away = context?.fixture?.awayTeam ?? 'Away';
-  const model = context?.modelProbabilitiesPct;
-  const market = context?.polymarketProbabilitiesPct ?? polymarket?.implied ?? null;
-  const blended = context?.blendedProbabilitiesPct;
-  const scorelines = context?.topScorelines ?? [];
-  const pm = polymarket;
+  const home = bundle?.fixture?.homeTeam ?? 'PSG';
+  const away = bundle?.fixture?.awayTeam ?? 'Arsenal';
+  const model = bundle?.modelProbabilities;
+  const market = bundle?.marketProbabilities ?? bundle?.polymarket?.implied ?? null;
+  const blended = bundle?.probabilities;
+  const scorelines = bundle?.scorelines ?? [];
+  const pm = bundle?.polymarket;
+  const stats = bundle?.stats?.predictedStats;
+  const scorers = bundle?.stats?.goalscorers ?? [];
 
-  if (!context && (q.includes('polymarket') || q.includes('odds'))) {
-    if (pm?.found && pm.implied) {
-      return `Latest Polymarket (${pm.source || 'live'}): ${home} ${pct(pm.implied.homeWin)}, Draw ${pct(pm.implied.draw)}, ${away} ${pct(pm.implied.awayWin)}.${pm.marketQuestion ? ` Market: ${pm.marketQuestion}` : ''}${pm.note ? ` Note: ${pm.note}` : ''}`;
+  const blocks = [];
+
+  if (!bundle?.probabilities && !pm?.found) {
+    blocks.push(
+      'Tip: run Predict on the Predictions tab for full numbers. Set GROQ_API_KEY in .env.local for open-ended AI answers.'
+    );
+  }
+
+  if (q.includes('tactic') || q.includes('matchup') || q.includes('key') || q.includes('weakness')) {
+    const ps = bundle?.stats?.predictedStats;
+    const hg = ps?.home?.goals ?? ps?.home?.xG ?? bundle?.model?.lambda?.home;
+    const ag = ps?.away?.goals ?? ps?.away?.xG ?? bundle?.model?.lambda?.away;
+    blocks.push(
+      `${home} vs ${away}: high-stakes final — tempo and transitions matter.`,
+      hg != null && ag != null ? `Expected goals: ${home} ${hg}, ${away} ${ag}.` : '',
+      'See the Stats tab for shots, xG, and possession.'
+    );
+  }
+
+  if (q.includes('bet') || q.includes('value') || q.includes('punt')) {
+    blocks.push(
+      market
+        ? `Market view: ${format1x2('Polymarket', market, home, away)}. Model: ${model ? format1x2('model', model, home, away) : 'n/a'}. Compare gaps before betting — not financial advice.`
+        : 'No Polymarket blend loaded. Run Predict with API keys configured.'
+    );
+  }
+
+  if (q.includes('score') || q.includes('scoreline')) {
+    if (scorelines.length) {
+      blocks.push(
+        'Top scorelines:\n' +
+          scorelines.slice(0, 6).map((s, i) => `${i + 1}. ${s.score} — ${pct(s.probability)}`).join('\n')
+      );
     }
-    return 'Run Predict on the Predictions tab first so I can load match context and Polymarket odds.';
   }
 
-  if (!context) {
-    return 'Run Predict on the Predictions tab to load fixture context, then ask about model vs market, scorelines, or Polymarket.';
-  }
-
-  if (q.includes('plain english') || q.includes('summarize')) {
-    const fav = blended
-      ? Object.entries({ [home]: blended.homeWin, Draw: blended.draw, [away]: blended.awayWin }).sort(
-          (a, b) => b[1] - a[1]
-        )[0]
-      : null;
-    const top = scorelines[0];
-    return [
-      `${home} vs ${away} (UCL Final context).`,
-      fav ? `Blended view favors ${fav[0]} at ${pct(fav[1])}.` : '',
-      top ? `Most likely scoreline: ${top.score} (${pct(top.probability)}).` : '',
-      market ? `Polymarket leans ${market.homeWin >= market.awayWin ? home : away} on live odds.` : 'Polymarket odds not blended (model-only).'
-    ]
-      .filter(Boolean)
-      .join(' ');
-  }
-
-  if (q.includes('disagree') || q.includes('differ') || q.includes('edge')) {
-    if (!model || !market) {
-      return 'Need both model and Polymarket in the blend to compare disagreement. Run Predict with live market data.';
+  if (q.includes('scorer') || q.includes('goal') || q.includes('dembele') || q.includes('saka') || q.includes('score')) {
+    if (scorers.length) {
+      blocks.push(
+        'Anytime scorer (model):\n' +
+          scorers.slice(0, 8).map((s, i) => `${i + 1}. ${s.name} (${s.team}) — ${pct(s.probability)}`).join('\n')
+      );
     }
-    const gaps = [
-      { label: home, v: Math.abs(model.homeWin - market.homeWin) },
-      { label: 'Draw', v: Math.abs(model.draw - market.draw) },
-      { label: away, v: Math.abs(model.awayWin - market.awayWin) }
-    ].sort((a, b) => b.v - a.v);
-    const biggest = gaps[0];
-    return [
-      format1x2('Model', model, home, away),
-      format1x2('Polymarket', market, home, away),
-      format1x2('Blended (50/50 default)', blended, home, away),
-      `Largest gap is on ${biggest.label} (${biggest.v.toFixed(1)} pts). Markets often price sentiment and liquidity; the model uses season scoring rates (Poisson).`
-    ].join('\n\n');
+  }
+
+  if (q.includes('assist')) {
+    const assisters = bundle?.stats?.assisters ?? [];
+    if (assisters.length) {
+      blocks.push(
+        'Most likely assists (model):\n' +
+          assisters.slice(0, 8).map((s, i) => `${i + 1}. ${s.name} (${s.team}) — ${pct(s.probability)}`).join('\n')
+      );
+    }
+  }
+
+  if (q.includes('stat') || q.includes('shot') || q.includes('xg') || q.includes('corner') || q.includes('possession')) {
+    if (stats) {
+      blocks.push(
+        `Expected stats — ${home}: ${stats.home?.goals ?? stats.home?.xG} goals, ${stats.home?.shots} shots, ${stats.home?.shotsOnTarget} SOT, ${stats.home?.possession}% poss.`,
+        `${away}: ${stats.away?.goals ?? stats.away?.xG} goals, ${stats.away?.shots} shots, ${stats.away?.shotsOnTarget} SOT, ${stats.away?.possession}% poss.`
+      );
+    }
   }
 
   if (q.includes('polymarket') || q.includes('odds') || q.includes('market')) {
-    const lines = [
+    blocks.push(
       pm?.found
-        ? `Polymarket source: ${pm.source || 'live'}${pm.marketType ? ` (${pm.marketType})` : ''}.`
-        : pm?.message || 'Polymarket market not found for this fixture.',
-      market ? format1x2('Implied 1X2 used in blend', market, home, away) : '',
-      pm?.marketQuestion ? `Market: ${pm.marketQuestion}` : '',
-      pm?.note ? pm.note : '',
-      pm?.dataApiNote ? pm.dataApiNote : ''
-    ].filter(Boolean);
-    return lines.join('\n\n');
+        ? `Polymarket (${pm.source}): ${format1x2('odds', market, home, away)}. ${pm.marketQuestion || ''}`
+        : pm?.message || 'No Polymarket market matched.'
+    );
   }
 
-  if (q.includes('scoreline') || q.includes('score')) {
-    if (!scorelines.length) return 'No scorelines in context yet.';
-    const lines = scorelines.slice(0, 5).map((s, i) => `${i + 1}. ${s.score} — ${pct(s.probability)}`);
-    return `Top scorelines from the model:\n${lines.join('\n')}`;
+  if (q.includes('summarize') || q.includes('plain') || q.includes('explain')) {
+    blocks.push(bundle?.verdict?.summary ?? 'Run Predict for a verdict summary.');
+    if (blended) blocks.push(format1x2('Blended win chances', blended, home, away));
   }
 
-  if (q.includes('dembele') || q.includes('scorer') || q.includes('goal')) {
-    return 'Player scorer markets are not wired in this build. Check Polymarket directly for “Dembélé” or “first goalscorer” markets.';
+  if (q.includes('disagree') || q.includes('differ') || q.includes('why')) {
+    if (model && market) {
+      blocks.push(format1x2('Model', model, home, away), format1x2('Polymarket', market, home, away));
+    }
   }
 
-  return [
-    `${home} vs ${away} — quick snapshot:`,
-    format1x2('Blended', blended, home, away),
-    model ? format1x2('Model only', model, home, away) : '',
-    market ? format1x2('Polymarket', market, home, away) : '',
-    scorelines[0] ? `Top scoreline: ${scorelines[0].score} (${pct(scorelines[0].probability)}).` : '',
-    'Try: “Summarize in plain English”, “Why might model and Polymarket disagree?”, or “Show latest Polymarket odds.”'
-  ]
-    .filter(Boolean)
-    .join('\n\n');
+  if (!blocks.length) {
+    blocks.push(
+      `${home} vs ${away} — UCL Final.`,
+      blended ? format1x2('Blended', blended, home, away) : '',
+      model ? format1x2('Model', model, home, away) : '',
+      market ? format1x2('Polymarket', market, home, away) : '',
+      bundle?.verdict?.summary ?? '',
+      'Add GROQ_API_KEY for full conversational AI. Ask about tactics, odds, scorelines, stats, or specific players.'
+    );
+  }
+
+  return blocks.filter(Boolean).join('\n\n');
+}
+
+export async function getAnalystAnswer({ question, prediction, polymarket, history, context }) {
+  const q = String(question || '').trim();
+  if (!q) throw new Error('question is required');
+
+  let bundle = buildAnalystBundle({
+    prediction:
+      prediction ??
+      (context
+        ? {
+            fixture: context.fixture,
+            probabilities: context.blendedProbabilitiesPct,
+            modelProbabilities: context.modelProbabilitiesPct,
+            marketProbabilities: context.polymarketProbabilitiesPct,
+            scorelines: context.topScorelines
+          }
+        : null),
+    polymarket
+  });
+
+  if (!bundle) {
+    bundle = buildAnalystBundle({
+      prediction: {
+        fixture: {
+          homeTeam: 'PSG',
+          awayTeam: 'Arsenal',
+          competition: 'UEFA Champions League',
+          stage: 'Final',
+          venueCity: 'Budapest',
+          date: 'May 30, 2026',
+          neutralVenue: true
+        }
+      },
+      polymarket: null
+    });
+  }
+
+  bundle = await enrichAnalystBundle(bundle);
+
+  if (getGroqApiKey()) {
+    try {
+      const answer = await askGroq({ question: q, bundle, history });
+      if (answer) {
+        return { answer, provider: 'groq', model: GROQ_MODEL, hasContext: Boolean(bundle?.probabilities) };
+      }
+    } catch (err) {
+      console.error('[analyst] Groq failed:', err.message);
+      const fallback = buildRuleBasedAnswer({ question: q, bundle });
+      return {
+        answer: `${fallback}\n\n(AI unavailable: ${err.message}. Check GROQ_API_KEY / rate limits.)`,
+        provider: 'rules-fallback',
+        model: null,
+        hasContext: Boolean(bundle?.probabilities)
+      };
+    }
+  }
+
+  return {
+    answer: buildRuleBasedAnswer({ question: q, bundle }),
+    provider: 'rules',
+    model: null,
+    hasContext: Boolean(bundle?.probabilities)
+  };
 }

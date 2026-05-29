@@ -116,8 +116,14 @@ function topScorelines(matrix, homeName, awayName, topN = 7) {
     }));
 }
 
+export function isGoalkeeperPlayer(player) {
+  const pos = String(player?.position ?? '').toLowerCase();
+  return pos.includes('goalkeeper') || pos === 'gk' || pos === 'g';
+}
+
 function scorerProbabilities(team, expectedGoals) {
-  const players = team.players?.filter((p) => p.likelyStarter || p.benchImpact) ?? [];
+  const players =
+    team.players?.filter((p) => (p.likelyStarter || p.benchImpact) && !isGoalkeeperPlayer(p)) ?? [];
   const totalShare = players.reduce((acc, p) => acc + (p.xgShare ?? 0), 0) || 1;
 
   const out = players.map((p) => {

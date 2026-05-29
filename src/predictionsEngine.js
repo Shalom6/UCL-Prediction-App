@@ -1,5 +1,5 @@
 import { buildPrediction } from './predictor.js';
-import { getFixtureContext, getTeamProfiles } from './sampleData.js';
+import { getDataCatalog, getFixtureContext, getTeamProfiles } from './sampleData.js';
 import { fetchPolymarketOdds } from './polymarket.js';
 
 /**
@@ -71,10 +71,17 @@ export async function buildPredictionsResponse(body) {
     },
     model: {
       lambda: prediction.model.lambda,
-      note: 'UCL season goals for/against per match (Poisson model, final-adjusted)'
+      note: 'Poisson model using blended historical (2000-26) + 2025-26 form & rosters'
     },
     polymarket,
     blend,
+    dataSources: {
+      teams: {
+        home: home.dataProvenance,
+        away: away.dataProvenance
+      },
+      catalog: getDataCatalog()
+    },
     updatedAt: new Date().toISOString()
   };
 }

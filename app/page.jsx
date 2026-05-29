@@ -1,28 +1,13 @@
 'use client';
 
 import { useState } from 'react';
-import AnalystPanel from '../AnalystPanel';
+import AnalystPanel from '../components/AnalystPanel';
 import PredictionsPanel from '../components/PredictionsPanel';
-
-/** Maps /api/predictions payload to the shape AnalystPanel expects (unchanged component). */
-function toAnalystPredictionContext(data) {
-  if (!data) return null;
-  return {
-    fixture: data.fixture,
-    blended: data.probabilities,
-    model: { outcome: data.modelProbabilities },
-    market: data.marketProbabilities,
-    topScorelines: data.scorelines ?? [],
-    topScorers: data.topScorers ?? [],
-    expectedStats: data.expectedStats ?? null
-  };
-}
+import StatsPanel from '../components/StatsPanel';
 
 export default function Page() {
   const [tab, setTab] = useState('predictions');
   const [prediction, setPrediction] = useState(null);
-
-  const analystContext = toAnalystPredictionContext(prediction);
 
   return (
     <div className="app">
@@ -37,6 +22,14 @@ export default function Page() {
         </button>
         <button
           type="button"
+          className={`tab${tab === 'stats' ? ' active' : ''}`}
+          aria-selected={tab === 'stats'}
+          onClick={() => setTab('stats')}
+        >
+          Stats
+        </button>
+        <button
+          type="button"
           className={`tab${tab === 'analyst' ? ' active' : ''}`}
           aria-selected={tab === 'analyst'}
           onClick={() => setTab('analyst')}
@@ -47,8 +40,10 @@ export default function Page() {
 
       {tab === 'predictions' ? (
         <PredictionsPanel onPredictionUpdate={setPrediction} />
+      ) : tab === 'stats' ? (
+        <StatsPanel fixture={prediction?.fixture ?? null} />
       ) : (
-        <AnalystPanel predictionContext={analystContext} polymarketSnapshot={prediction?.polymarket ?? null} />
+        <AnalystPanel prediction={prediction} />
       )}
     </div>
   );
