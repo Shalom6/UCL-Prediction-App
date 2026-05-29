@@ -38,7 +38,8 @@ src/
     arsenal.json
 
 scripts/
-  sync-bundled-data.mjs        # sync curated rosters into team JSON (no API)
+  sync-bundled-data.mjs        # sync curated rosters into team JSON
+  import-balldontlie.mjs       # refresh from BallDontLie UCL API
 
 server.js             # Express on port 4001
 ```
@@ -75,9 +76,18 @@ Profiles blend **UCL era baselines (2000-2026)**, **2025-26 season stats**, and 
 | 2025-26 UCL season | 65% | `season2025_26.ucl` |
 | Last 10 matches | 15% | `season2025_26.formLast10` |
 
-All team stats, form, and rosters live in **`src/data/`** (curated JSON — no external football API).
+Team stats, form, and rosters live in **`src/data/`** (curated JSON). Refresh UCL standings from BallDontLie **without replacing** bundled stats:
 
-After editing `src/data/rosters-2025-26.json` or `psg.json` / `arsenal.json`:
+```bash
+# BALLDONTLIE_API_KEY in .env.local
+npm run import:balldontlie
+```
+
+**Merge behaviour (free tier):**
+- **From API:** UCL W/D/L, goals for/against, roster name/position cross-check
+- **From bundled:** xG, shots, corners, league + mixed form, starter minutes & xG shares
+
+Hand-edit squads in `src/data/rosters-2025-26.json`, then:
 
 ```bash
 npm run sync:data

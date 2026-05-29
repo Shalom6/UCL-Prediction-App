@@ -42,6 +42,55 @@ function outcomeFromMatrix(matrix) {
   return { homeWin: homeWin / sum, draw: draw / sum, awayWin: awayWin / sum };
 }
 
+/**
+ * Knockout final: 90 min → ET → pens. Returns paths + outright trophy %.
+ * @param {number} lambdaHome
+ * @param {number} lambdaAway
+ * @param {{ homeWin: number, draw: number, awayWin: number }} regulationPct — 0–100
+ */
+export function computeKnockoutResolution(lambdaHome, lambdaAway, regulationPct) {
+  const r90 = {
+    homeWin: (regulationPct.homeWin ?? 0) / 100,
+    draw: (regulationPct.draw ?? 0) / 100,
+    awayWin: (regulationPct.awayWin ?? 0) / 100
+  };
+
+  const etScale = 0.38;
+  const etOutcome = outcomeFromMatrix(
+    scoreMatrix(lambdaHome * etScale, lambdaAway * etScale, 5)
+  );
+
+  const pExtraTime = r90.draw;
+  const pPenalties = pExtraTime * etOutcome.draw;
+  const pHomeExtraTime = pExtraTime * etOutcome.homeWin;
+  const pAwayExtraTime = pExtraTime * etOutcome.awayWin;
+
+  const penEdge = clamp((lambdaHome - lambdaAway) * 0.1, -0.14, 0.14);
+  const pHomePenalties = pPenalties * (0.5 + penEdge);
+  const pAwayPenalties = pPenalties * (0.5 - penEdge);
+
+  const homeTrophy = r90.homeWin + pHomeExtraTime + pHomePenalties;
+  const awayTrophy = r90.awayWin + pAwayExtraTime + pAwayPenalties;
+  const trophySum = homeTrophy + awayTrophy || 1;
+
+  return {
+    extraTimePct: round(pExtraTime * 100, 1),
+    penaltiesPct: round(pPenalties * 100, 1),
+    toLiftTrophy: {
+      homeWin: round((homeTrophy / trophySum) * 100, 1),
+      awayWin: round((awayTrophy / trophySum) * 100, 1)
+    },
+    paths: {
+      homeWin90Pct: round(r90.homeWin * 100, 1),
+      homeWinExtraTimePct: round(pHomeExtraTime * 100, 1),
+      homeWinPenaltiesPct: round(pHomePenalties * 100, 1),
+      awayWin90Pct: round(r90.awayWin * 100, 1),
+      awayWinExtraTimePct: round(pAwayExtraTime * 100, 1),
+      awayWinPenaltiesPct: round(pAwayPenalties * 100, 1)
+    }
+  };
+}
+
 function normalizeOutcome(o) {
   if (!o) return null;
   const homeWin = Number(o.homeWin);

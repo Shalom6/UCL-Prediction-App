@@ -51,7 +51,7 @@ function BettingCategoryCard({ category, homeTeam, awayTeam }) {
       <div className="bettingCardHead">
         <div>
           <div className="cardTitle">{category.label}</div>
-          <div className="bet365Hint">{category.bet365Examples}</div>
+          <div className="marketHint">{category.marketTags}</div>
         </div>
         {category.match ? (
           <div className="matchExpected">
@@ -174,7 +174,7 @@ export default function StatsPanel({ fixture }) {
             <div className="appIconInner">📊</div>
           </div>
           <div className="navTitleWrap">
-            <div className="navTitle">Bet365-style stats</div>
+            <div className="navTitle">Match prop projections</div>
             <div className="navSubtitle">
               {fixture
                 ? `${fixture.competition ?? 'UEFA Champions League'} · ${homeTeam} vs ${awayTeam}`
@@ -197,8 +197,7 @@ export default function StatsPanel({ fixture }) {
 
       <section className="glass card infoCard">
         <p className="muted small" style={{ margin: 0 }}>
-          Model estimates (Poisson + {rosterSeason} rosters). O/U % are not live Bet365 prices. Player lists use
-          curated 2025-26 squads (Dembélé, Kvara, Gyökeres, etc.).
+          Poisson model + {rosterSeason} squads. Projections are computed in-app from team rates and match context.
         </p>
       </section>
 

@@ -19,12 +19,12 @@
   "season2025_26": {
     "label": "2025-26",
     "ucl": {
-      "played": 13,
+      "played": 8,
       "wins": 8,
-      "draws": 3,
-      "losses": 2,
-      "goalsFor": 24,
-      "goalsAgainst": 11,
+      "draws": 0,
+      "losses": 0,
+      "goalsFor": 23,
+      "goalsAgainst": 4,
       "xgFor": 23.8,
       "xgAgainst": 12.4,
       "shotsPerMatch": 14.6,
@@ -106,28 +106,28 @@
         "position": "Attacker",
         "likelyStarter": true,
         "minutesFactor": 0.97,
-        "xgShare": 0.22
+        "xgShare": 0.186
       },
       {
         "name": "V. Gyökeres",
         "position": "Attacker",
         "likelyStarter": true,
         "minutesFactor": 0.92,
-        "xgShare": 0.2
+        "xgShare": 0.169
       },
       {
         "name": "G. Martinelli",
         "position": "Attacker",
         "likelyStarter": true,
         "minutesFactor": 0.9,
-        "xgShare": 0.14
+        "xgShare": 0.119
       },
       {
         "name": "E. Eze",
-        "position": "Attacker",
+        "position": "Midfielder",
         "likelyStarter": true,
         "minutesFactor": 0.85,
-        "xgShare": 0.12
+        "xgShare": 0.102
       },
       {
         "name": "L. Trossard",
@@ -135,28 +135,28 @@
         "likelyStarter": false,
         "benchImpact": true,
         "minutesFactor": 0.7,
-        "xgShare": 0.08
+        "xgShare": 0.068
       },
       {
         "name": "M. Ødegaard",
         "position": "Midfielder",
         "likelyStarter": true,
         "minutesFactor": 0.94,
-        "xgShare": 0.08
+        "xgShare": 0.068
       },
       {
         "name": "D. Rice",
         "position": "Midfielder",
         "likelyStarter": true,
         "minutesFactor": 0.95,
-        "xgShare": 0.03
+        "xgShare": 0.025
       },
       {
         "name": "M. Zubimendi",
         "position": "Midfielder",
         "likelyStarter": true,
         "minutesFactor": 0.93,
-        "xgShare": 0.04
+        "xgShare": 0.034
       },
       {
         "name": "M. Merino",
@@ -164,42 +164,42 @@
         "likelyStarter": false,
         "benchImpact": true,
         "minutesFactor": 0.75,
-        "xgShare": 0.05
+        "xgShare": 0.042
       },
       {
         "name": "Gabriel",
         "position": "Defender",
         "likelyStarter": true,
         "minutesFactor": 0.92,
-        "xgShare": 0.04
+        "xgShare": 0.034
       },
       {
         "name": "W. Saliba",
         "position": "Defender",
         "likelyStarter": true,
         "minutesFactor": 0.93,
-        "xgShare": 0.02
+        "xgShare": 0.017
       },
       {
         "name": "J. Timber",
         "position": "Defender",
         "likelyStarter": true,
         "minutesFactor": 0.9,
-        "xgShare": 0.02
+        "xgShare": 0.017
       },
       {
         "name": "R. Calafiori",
         "position": "Defender",
         "likelyStarter": true,
         "minutesFactor": 0.88,
-        "xgShare": 0.03
+        "xgShare": 0.025
       },
       {
         "name": "B. White",
         "position": "Defender",
         "likelyStarter": true,
         "minutesFactor": 0.91,
-        "xgShare": 0.02
+        "xgShare": 0.017
       },
       {
         "name": "D. Raya",
@@ -207,10 +207,43 @@
         "likelyStarter": true,
         "minutesFactor": 1,
         "xgShare": 0
+      },
+      {
+        "name": "A. Annous",
+        "position": "Attacker",
+        "likelyStarter": false,
+        "benchImpact": true,
+        "minutesFactor": 0.35,
+        "xgShare": 0.025
+      },
+      {
+        "name": "B. Bailey-Joseph",
+        "position": "Attacker",
+        "likelyStarter": false,
+        "benchImpact": true,
+        "minutesFactor": 0.35,
+        "xgShare": 0.025
+      },
+      {
+        "name": "C. O’Neill",
+        "position": "Attacker",
+        "likelyStarter": false,
+        "benchImpact": true,
+        "minutesFactor": 0.35,
+        "xgShare": 0.025
       }
     ],
-    "importSource": "bundled-curated-2025-26",
-    "lastImportedAt": null,
-    "lastSyncedAt": "2026-05-29T22:39:55.787Z"
+    "importSource": "bundled+balldontlie",
+    "lastImportedAt": "2026-05-29T22:58:05.759Z",
+    "lastSyncedAt": "2026-05-29T22:54:05.353Z",
+    "importApiSeason": 2025,
+    "importApiSeasonLabel": "2025-26",
+    "lastMergedAt": "2026-05-29T22:58:05.759Z",
+    "mergeNotes": {
+      "uclFromApi": true,
+      "rosterBase": "curated",
+      "formFromApi": false,
+      "statsFromApi": false
+    }
   }
 }

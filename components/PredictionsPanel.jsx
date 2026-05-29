@@ -22,6 +22,18 @@ function ProbBar({ home, draw, away }) {
   );
 }
 
+function TrophyBar({ home, away, homeName, awayName }) {
+  const h = clamp(home ?? 0, 0, 100);
+  const a = clamp(away ?? 0, 0, 100);
+  const denom = h + a || 1;
+  return (
+    <div className="probBar trophyBar" aria-label="To lift trophy probability bar">
+      <div className="seg home" style={{ width: `${(h / denom) * 100}%` }} title={homeName} />
+      <div className="seg away" style={{ width: `${(a / denom) * 100}%` }} title={awayName} />
+    </div>
+  );
+}
+
 function ProbRow({ label, p, homeName, awayName }) {
   if (!p) return null;
   return (
@@ -96,6 +108,7 @@ export default function PredictionsPanel({ onPredictionUpdate }) {
   }, []);
 
   const p = data?.probabilities;
+  const ko = data?.knockout;
   const homeName = data?.fixture?.homeTeam ?? 'PSG';
   const awayName = data?.fixture?.awayTeam ?? 'Arsenal';
   const pm = data?.polymarket;
@@ -182,7 +195,7 @@ export default function PredictionsPanel({ onPredictionUpdate }) {
 
       <div className="grid">
         <section className="glass card">
-          <div className="cardTitle">Win probabilities {hasMarket ? '(blended)' : '(model)'}</div>
+          <div className="cardTitle">Win probabilities {hasMarket ? '(blended)' : '(model)'} · 90 minutes</div>
           <div className="triple">
             <div className="pill">
               <div className="pillLabel">{homeName}</div>
@@ -198,6 +211,44 @@ export default function PredictionsPanel({ onPredictionUpdate }) {
             </div>
           </div>
           <ProbBar home={p?.homeWin} draw={p?.draw} away={p?.awayWin} />
+
+          {ko ? (
+            <div className="sourceBlock knockoutBlock">
+              <div className="sourceLabel">If level after 90 minutes</div>
+              <div className="knockoutPills">
+                <div className="pill">
+                  <div className="pillLabel">Extra time</div>
+                  <div className="pillValue smallVal">{pct(ko.extraTimePct)}</div>
+                </div>
+                <div className="pill">
+                  <div className="pillLabel">Penalties</div>
+                  <div className="pillValue smallVal">{pct(ko.penaltiesPct)}</div>
+                </div>
+              </div>
+            </div>
+          ) : null}
+
+          {ko ? (
+            <div className="sourceBlock">
+              <div className="sourceLabel">To lift the trophy (incl. ET &amp; pens)</div>
+              <div className="triple compact">
+                <div className="pill">
+                  <div className="pillLabel">{homeName}</div>
+                  <div className="pillValue smallVal">{pct(ko.toLiftTrophy?.homeWin)}</div>
+                </div>
+                <div className="pill">
+                  <div className="pillLabel">{awayName}</div>
+                  <div className="pillValue smallVal">{pct(ko.toLiftTrophy?.awayWin)}</div>
+                </div>
+              </div>
+              <TrophyBar
+                home={ko.toLiftTrophy?.homeWin}
+                away={ko.toLiftTrophy?.awayWin}
+                homeName={homeName}
+                awayName={awayName}
+              />
+            </div>
+          ) : null}
 
           <ProbRow label="Season stats model" p={data?.modelProbabilities} homeName={homeName} awayName={awayName} />
           {hasMarket ? (
@@ -243,7 +294,16 @@ export default function PredictionsPanel({ onPredictionUpdate }) {
         <p className="verdictSummary">{data?.verdict?.summary ?? '—'}</p>
         {data?.verdict ? (
           <p className="muted small">
-            Favorite: <strong>{data.verdict.favorite}</strong> · Edge: {data.verdict.confidenceGap.toFixed(1)} pts
+            {data.verdict.isDeadHeat ? (
+              <>
+                Level: <strong>{data.verdict.favorite}</strong> · Edge: none
+              </>
+            ) : (
+              <>
+                Favorite: <strong>{data.verdict.favorite}</strong> · Edge:{' '}
+                {data.verdict.confidenceGap.toFixed(1)} pts
+              </>
+            )}
           </p>
         ) : null}
       </section>

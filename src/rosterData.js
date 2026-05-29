@@ -26,5 +26,7 @@ export function resolveRoster(teamName, candidateRoster) {
   const curated = getCuratedRoster(teamName);
   if (!candidateRoster?.length) return curated;
   if (!isHealthyRoster(candidateRoster)) return curated;
+  // Prefer curated squad size — full API dumps (30+ players) stay curated-only
+  if (candidateRoster.length > curated.length + 8) return curated;
   return candidateRoster;
 }

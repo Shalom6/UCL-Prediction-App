@@ -407,6 +407,21 @@ body {
   background: var(--ucl-silver);
 }
 
+.knockoutBlock {
+  margin-top: 4px;
+}
+
+.knockoutPills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.trophyBar {
+  margin-top: 6px;
+  margin-bottom: 4px;
+}
+
 .statsGrid {
   display: flex;
   flex-direction: column;
@@ -563,7 +578,7 @@ body {
   flex-wrap: wrap;
 }
 
-.bet365Hint {
+.marketHint {
   font-size: 11px;
   color: var(--muted);
   margin-top: 6px;

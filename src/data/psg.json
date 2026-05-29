@@ -20,12 +20,12 @@
   "season2025_26": {
     "label": "2025-26",
     "ucl": {
-      "played": 13,
-      "wins": 9,
+      "played": 8,
+      "wins": 4,
       "draws": 2,
       "losses": 2,
-      "goalsFor": 28,
-      "goalsAgainst": 12,
+      "goalsFor": 21,
+      "goalsAgainst": 11,
       "xgFor": 26.4,
       "xgAgainst": 13.1,
       "shotsPerMatch": 15.2,
@@ -107,28 +107,28 @@
         "position": "Attacker",
         "likelyStarter": true,
         "minutesFactor": 0.96,
-        "xgShare": 0.24
+        "xgShare": 0.192
       },
       {
         "name": "B. Barcola",
         "position": "Attacker",
         "likelyStarter": true,
         "minutesFactor": 0.92,
-        "xgShare": 0.17
+        "xgShare": 0.136
       },
       {
         "name": "D. Doué",
         "position": "Attacker",
         "likelyStarter": true,
         "minutesFactor": 0.9,
-        "xgShare": 0.15
+        "xgShare": 0.12
       },
       {
         "name": "K. Kvaratskhelia",
         "position": "Attacker",
         "likelyStarter": true,
         "minutesFactor": 0.88,
-        "xgShare": 0.14
+        "xgShare": 0.112
       },
       {
         "name": "G. Ramos",
@@ -136,35 +136,35 @@
         "likelyStarter": false,
         "benchImpact": true,
         "minutesFactor": 0.72,
-        "xgShare": 0.09
+        "xgShare": 0.072
       },
       {
         "name": "V. Vitinha",
         "position": "Midfielder",
         "likelyStarter": true,
         "minutesFactor": 0.94,
-        "xgShare": 0.06
+        "xgShare": 0.048
       },
       {
         "name": "F. Ruiz",
         "position": "Midfielder",
         "likelyStarter": true,
         "minutesFactor": 0.92,
-        "xgShare": 0.05
+        "xgShare": 0.04
       },
       {
         "name": "João Neves",
         "position": "Midfielder",
         "likelyStarter": true,
         "minutesFactor": 0.91,
-        "xgShare": 0.05
+        "xgShare": 0.04
       },
       {
         "name": "W. Zaïre-Emery",
         "position": "Midfielder",
         "likelyStarter": true,
         "minutesFactor": 0.9,
-        "xgShare": 0.04
+        "xgShare": 0.032
       },
       {
         "name": "Lee Kang-In",
@@ -172,7 +172,7 @@
         "likelyStarter": false,
         "benchImpact": true,
         "minutesFactor": 0.65,
-        "xgShare": 0.03
+        "xgShare": 0.024
       },
       {
         "name": "Senny Mayulu",
@@ -180,42 +180,42 @@
         "likelyStarter": false,
         "benchImpact": true,
         "minutesFactor": 0.55,
-        "xgShare": 0.03
+        "xgShare": 0.024
       },
       {
         "name": "A. Hakimi",
         "position": "Defender",
         "likelyStarter": true,
         "minutesFactor": 0.93,
-        "xgShare": 0.03
+        "xgShare": 0.024
       },
       {
         "name": "Marquinhos",
         "position": "Defender",
         "likelyStarter": true,
         "minutesFactor": 0.92,
-        "xgShare": 0.02
+        "xgShare": 0.016
       },
       {
         "name": "W. Pacho",
         "position": "Defender",
         "likelyStarter": true,
         "minutesFactor": 0.91,
-        "xgShare": 0.02
+        "xgShare": 0.016
       },
       {
         "name": "L. Hernández",
         "position": "Defender",
         "likelyStarter": true,
         "minutesFactor": 0.88,
-        "xgShare": 0.02
+        "xgShare": 0.016
       },
       {
         "name": "Nuno Mendes",
         "position": "Defender",
         "likelyStarter": true,
         "minutesFactor": 0.9,
-        "xgShare": 0.02
+        "xgShare": 0.016
       },
       {
         "name": "G. Donnarumma",
@@ -223,10 +223,43 @@
         "likelyStarter": true,
         "minutesFactor": 1,
         "xgShare": 0
+      },
+      {
+        "name": "I. Mbaye",
+        "position": "Attacker",
+        "likelyStarter": false,
+        "benchImpact": true,
+        "minutesFactor": 0.35,
+        "xgShare": 0.024
+      },
+      {
+        "name": "P. Mounguengue",
+        "position": "Attacker",
+        "likelyStarter": false,
+        "benchImpact": true,
+        "minutesFactor": 0.35,
+        "xgShare": 0.024
+      },
+      {
+        "name": "Q. Ndjantou",
+        "position": "Attacker",
+        "likelyStarter": false,
+        "benchImpact": true,
+        "minutesFactor": 0.35,
+        "xgShare": 0.024
       }
     ],
-    "importSource": "bundled-curated-2025-26",
-    "lastImportedAt": null,
-    "lastSyncedAt": "2026-05-29T22:39:55.780Z"
+    "importSource": "bundled+balldontlie",
+    "lastImportedAt": "2026-05-29T22:57:45.824Z",
+    "lastSyncedAt": "2026-05-29T22:54:05.351Z",
+    "importApiSeason": 2025,
+    "importApiSeasonLabel": "2025-26",
+    "lastMergedAt": "2026-05-29T22:57:45.825Z",
+    "mergeNotes": {
+      "uclFromApi": true,
+      "rosterBase": "curated",
+      "formFromApi": false,
+      "statsFromApi": false
+    }
   }
 }

@@ -1,5 +1,5 @@
 /**
- * Bet365-style presentation: team bars + match O/U lines (model estimates).
+ * Match prop categories: team bars + modelled over/under lines.
  */
 
 function clamp(x, min, max) {
@@ -57,7 +57,7 @@ export function buildBettingCategories({ fixture, predictedStats, lambdas }) {
     {
       id: 'goals',
       label: 'Goals',
-      bet365Examples: 'Match goals O/U · Team goals · BTTS',
+      marketTags: 'Match goals · Team totals · BTTS',
       team: [{ key: 'goals', label: 'Goals (exp.)', home: h.goals, away: a.goals }],
       match: { expected: match.goals, unit: 'goals' },
       lines: ouLines(totalGoals, [0.5, 1.5, 2.5, 3.5, 4.5, 5.5]),
@@ -73,7 +73,7 @@ export function buildBettingCategories({ fixture, predictedStats, lambdas }) {
     {
       id: 'corners',
       label: 'Corners',
-      bet365Examples: 'Match corners · Team corners',
+      marketTags: 'Match corners · Team corners',
       team: [{ key: 'corners', label: 'Corners', home: h.corners, away: a.corners }],
       match: { expected: match.corners, unit: 'corners' },
       lines: ouLines(match.corners, [7.5, 8.5, 9.5, 10.5, 11.5, 12.5]),
@@ -85,7 +85,7 @@ export function buildBettingCategories({ fixture, predictedStats, lambdas }) {
     {
       id: 'shots',
       label: 'Shots',
-      bet365Examples: 'Match shots · Team shots',
+      marketTags: 'Match shots · Team shots',
       team: [{ key: 'shots', label: 'Shots', home: h.shots, away: a.shots }],
       match: { expected: match.shots, unit: 'shots' },
       lines: ouLines(match.shots, [17.5, 19.5, 21.5, 23.5, 25.5]),
@@ -94,7 +94,7 @@ export function buildBettingCategories({ fixture, predictedStats, lambdas }) {
     {
       id: 'shotsOnTarget',
       label: 'Shots on target',
-      bet365Examples: 'Match SOT · Team SOT',
+      marketTags: 'Match SOT · Team SOT',
       team: [{ key: 'sot', label: 'Shots on target', home: h.shotsOnTarget, away: a.shotsOnTarget }],
       match: { expected: match.shotsOnTarget, unit: 'SOT' },
       lines: ouLines(match.shotsOnTarget, [6.5, 7.5, 8.5, 9.5, 10.5]),
@@ -103,7 +103,7 @@ export function buildBettingCategories({ fixture, predictedStats, lambdas }) {
     {
       id: 'cards',
       label: 'Cards & bookings',
-      bet365Examples: 'Yellow cards O/U · Booking points',
+      marketTags: 'Yellow cards · Booking points',
       team: [
         { key: 'yellow', label: 'Yellow cards', home: h.yellowCards, away: a.yellowCards },
         { key: 'booking', label: 'Booking pts', home: h.bookingPoints, away: a.bookingPoints }
@@ -117,7 +117,7 @@ export function buildBettingCategories({ fixture, predictedStats, lambdas }) {
     {
       id: 'fouls',
       label: 'Fouls',
-      bet365Examples: 'Match fouls · Team fouls',
+      marketTags: 'Match fouls · Team fouls',
       team: [{ key: 'fouls', label: 'Fouls', home: h.fouls, away: a.fouls }],
       match: { expected: match.fouls, unit: 'fouls' },
       lines: ouLines(match.fouls, [18.5, 20.5, 22.5, 24.5, 26.5]),
@@ -126,7 +126,7 @@ export function buildBettingCategories({ fixture, predictedStats, lambdas }) {
     {
       id: 'offsides',
       label: 'Offsides',
-      bet365Examples: 'Match offsides · Team offsides',
+      marketTags: 'Match offsides · Team offsides',
       team: [{ key: 'offsides', label: 'Offsides', home: h.offsides, away: a.offsides }],
       match: { expected: match.offsides, unit: 'offsides' },
       lines: ouLines(match.offsides, [2.5, 3.5, 4.5, 5.5, 6.5]),
@@ -135,7 +135,7 @@ export function buildBettingCategories({ fixture, predictedStats, lambdas }) {
     {
       id: 'possession',
       label: 'Possession',
-      bet365Examples: 'Team possession %',
+      marketTags: 'Team possession %',
       team: [{ key: 'poss', label: 'Possession %', home: h.possession, away: a.possession }],
       match: null,
       lines: [],

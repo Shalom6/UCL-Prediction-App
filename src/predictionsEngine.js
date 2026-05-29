@@ -1,4 +1,4 @@
-import { buildPrediction } from './predictor.js';
+import { buildPrediction, computeKnockoutResolution } from './predictor.js';
 import { getDataCatalog, getFixtureContext, getTeamProfiles } from './sampleData.js';
 import { fetchPolymarketOdds } from './polymarket.js';
 
@@ -35,39 +35,66 @@ export async function buildPredictionsResponse(body) {
   const marketProbabilities = prediction.market;
   const probabilities = prediction.blended ?? modelProbabilities;
 
-  const ranked = [
+  const knockout = computeKnockoutResolution(
+    prediction.model.lambda.home,
+    prediction.model.lambda.away,
+    probabilities
+  );
+
+  const trophyRanked = [
+    { key: 'homeWin', label: prediction.fixture.homeTeam, value: knockout.toLiftTrophy.homeWin },
+    { key: 'awayWin', label: prediction.fixture.awayTeam, value: knockout.toLiftTrophy.awayWin }
+  ].sort((a, b) => b.value - a.value);
+
+  const trophyFavorite = trophyRanked[0];
+  const trophyRunnerUp = trophyRanked[1];
+  const trophyGap = Number((trophyFavorite.value - trophyRunnerUp.value).toFixed(1));
+  const TIE_THRESHOLD = 0.5;
+  const isDeadHeat = trophyGap < TIE_THRESHOLD;
+
+  let summary;
+  let favoriteLabel = trophyFavorite.label;
+
+  if (isDeadHeat) {
+    favoriteLabel = `${trophyFavorite.label} / ${trophyRunnerUp.label}`;
+    summary = `${trophyFavorite.label} and ${trophyRunnerUp.label} are neck and neck to lift the trophy`;
+  } else {
+    summary = `${trophyFavorite.label} most likely to win the final (incl. extra time & penalties if needed)`;
+  }
+
+  if (knockout.extraTimePct >= 8) {
+    summary += ` · ${knockout.extraTimePct}% chance of extra time`;
+  }
+  if (knockout.penaltiesPct >= 4) {
+    summary += ` · ${knockout.penaltiesPct}% chance of penalties`;
+  }
+
+  if (market && blend.marketWeight > 0 && blend.modelWeight > 0) {
+    summary += ` (90-min blend: ${Math.round(blend.modelWeight * 100)}% model, ${Math.round(blend.marketWeight * 100)}% Polymarket)`;
+  } else if (market) {
+    summary += ' (90-min: Polymarket odds only)';
+  }
+
+  const ranked90 = [
     { key: 'homeWin', label: prediction.fixture.homeTeam, value: probabilities.homeWin },
     { key: 'draw', label: 'Draw', value: probabilities.draw },
     { key: 'awayWin', label: prediction.fixture.awayTeam, value: probabilities.awayWin }
   ].sort((a, b) => b.value - a.value);
 
-  const favorite = ranked[0];
-  const runnerUp = ranked[1];
-  const confidenceGap = Number((favorite.value - runnerUp.value).toFixed(1));
-
-  let summary;
-  if (favorite.key === 'draw') {
-    summary = 'Draw is the most likely outcome in 90 minutes';
-  } else {
-    summary = `${favorite.label} are most likely to win in 90 minutes`;
-  }
-
-  if (market && blend.marketWeight > 0 && blend.modelWeight > 0) {
-    summary += ` (blended: ${Math.round(blend.modelWeight * 100)}% model, ${Math.round(blend.marketWeight * 100)}% Polymarket)`;
-  } else if (market) {
-    summary += ' (Polymarket odds only)';
-  }
-
   return {
     fixture: prediction.fixture,
     probabilities,
+    regulationProbabilities: probabilities,
+    knockout,
     modelProbabilities,
     marketProbabilities,
     scorelines: prediction.topScorelines,
     verdict: {
       summary,
-      favorite: favorite.label,
-      confidenceGap
+      favorite: favoriteLabel,
+      confidenceGap: isDeadHeat ? 0 : trophyGap,
+      isDeadHeat,
+      regulationFavorite: ranked90[0].label
     },
     model: {
       lambda: prediction.model.lambda,
