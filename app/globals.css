@@ -75,5 +75,31 @@ body{
 .rowLine{display:flex;justify-content:space-between;gap:10px;align-items:baseline}
 .right{color:var(--muted);font-size:12px}
 .footer{font-size:12px;color:var(--muted);padding:2px}
+.predictionsEngine{display:flex;flex-direction:column;gap:14px}
+.verdictCard{margin-top:0}
+.verdictSummary{font-size:16px;font-weight:700;line-height:1.4;margin:0 0 8px}
+.infoCard{padding:12px 14px}
+.badge{display:inline-block;padding:2px 8px;border-radius:999px;background:rgba(46,230,166,.2);color:#a7f3d0;font-size:11px;font-weight:700;margin-right:6px}
+.sourceBlock{margin-top:12px;padding-top:10px;border-top:1px solid var(--hair)}
+.sourceLabel{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:8px}
+.triple.compact{margin-bottom:0}
+.smallVal{font-size:16px}
+.tabBar{display:flex;gap:8px;padding:8px;margin-bottom:2px}
+.tab{flex:1;border:1px solid var(--hair);background:rgba(255,255,255,.04);color:var(--muted);padding:12px 14px;border-radius:14px;font-weight:800;font-size:14px;cursor:pointer}
+.tab.active{color:var(--text);background:linear-gradient(135deg, rgba(124,92,255,.28), rgba(46,230,166,.18));border-color:rgba(124,92,255,.45)}
+.analystPanel{display:flex;flex-direction:column;gap:12px}
+.analystHead{margin-bottom:4px}
+.analystTitle{font-weight:820;font-size:16px}
+.analystSub{font-size:12px;color:var(--muted);margin-top:4px}
+.quickRow{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:1px solid var(--hair);background:rgba(255,255,255,.06);color:var(--text);border-radius:999px;padding:8px 12px;font-size:12px;cursor:pointer}
+.chip:disabled{opacity:.55;cursor:not-allowed}
+.analystChat{display:flex;flex-direction:column;gap:10px;max-height:min(52vh,420px);overflow:auto}
+.bubble{max-width:92%;padding:10px 12px;border-radius:16px;border:1px solid var(--hair);font-size:14px;line-height:1.45;white-space:pre-wrap}
+.bubble.user{align-self:flex-end;background:rgba(124,92,255,.22)}
+.bubble.assistant{align-self:flex-start;background:rgba(10,14,28,.35)}
+.analystInputRow{display:flex;flex-direction:column;gap:10px;margin-top:4px}
+.analystInput{width:100%;resize:vertical;min-height:72px;background:rgba(255,255,255,.06);border:1px solid var(--hair);color:var(--text);border-radius:14px;padding:10px 12px;font:inherit}
+.analystError{margin:0;color:#ffb4b4;font-size:13px}
 @media (max-width: 920px){.grid{grid-template-columns:1fr}.select{min-width:220px}}
 

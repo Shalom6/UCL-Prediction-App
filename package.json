@@ -5,6 +5,7 @@
   "type": "module",
   "description": "UCL final predictor: root Next.js app + Express API.",
   "scripts": {
+    "predev": "npx kill-port 3000 4001",
     "dev": "concurrently \"npm:dev:api\" \"npm:dev:web\"",
     "dev:api": "node server.js",
     "dev:web": "next dev -p 3000",
