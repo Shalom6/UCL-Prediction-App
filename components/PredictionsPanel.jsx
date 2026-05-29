@@ -105,11 +105,8 @@ export default function PredictionsPanel({ onPredictionUpdate }) {
     <section className="predictionsEngine">
       <header className="nav glass">
         <div className="navLeft">
-          <div className="appIcon" aria-hidden="true">
-            <div className="appIconInner">⚽</div>
-          </div>
           <div className="navTitleWrap">
-            <div className="navTitle">UCL Final Predictor</div>
+            <div className="navTitle">Final Predictor</div>
             <div className="navSubtitle">{subtitle}</div>
           </div>
         </div>

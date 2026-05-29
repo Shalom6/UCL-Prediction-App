@@ -11,7 +11,13 @@ export default function Page() {
 
   return (
     <div className="app">
-      <nav className="tabBar glass" aria-label="Main sections">
+      <header className="uclHero">
+        <p className="uclHeroEyebrow">UEFA Champions League</p>
+        <h1 className="uclHeroTag">Final Predictor</h1>
+        <p className="uclMeta">PSG vs Arsenal · Budapest · May 30, 2026</p>
+      </header>
+
+      <nav className="tabBar" aria-label="Main sections">
         <button
           type="button"
           className={`tab${tab === 'predictions' ? ' active' : ''}`}

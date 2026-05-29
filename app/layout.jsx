@@ -1,21 +1,34 @@
+import { Cinzel, Inter } from 'next/font/google';
 import './globals.css';
+
+const cinzel = Cinzel({
+  subsets: ['latin'],
+  variable: '--font-cinzel',
+  weight: ['400', '600', '700', '800']
+});
+
+const inter = Inter({
+  subsets: ['latin'],
+  variable: '--font-inter'
+});
 
 export const metadata = {
   title: 'UCL Final Predictor',
-  description: 'Next.js + Express UCL final predictor'
+  description: 'UEFA Champions League Final predictor — PSG vs Arsenal'
 };
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en">
+    <html lang="en" className={`${cinzel.variable} ${inter.variable}`}>
       <body>
         <div className="bg">
-          <div className="bgGlow a" />
-          <div className="bgGlow b" />
+          <div className="bgBlack" aria-hidden="true" />
+          <div className="bgStarball" aria-hidden="true" />
+          <div className="bgVignette" aria-hidden="true" />
+          <div className="bgGrain" aria-hidden="true" />
           <div className="container">{children}</div>
         </div>
       </body>
     </html>
   );
 }
-
