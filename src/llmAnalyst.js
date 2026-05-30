@@ -1,4 +1,4 @@
-import { compactAnalystBundle } from './analystContext.js';
+import { buildLlmContext } from './analystContext.js';
 import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -10,41 +10,33 @@ dotenv.config({ path: path.join(appRoot, '.env') });
 
 export const GROQ_MODEL = process.env.GROQ_MODEL || 'llama-3.3-70b-versatile';
 const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
+const MAX_OUTPUT_TOKENS = Number(process.env.GROQ_MAX_TOKENS) || 900;
+const MAX_HISTORY_TURNS = Number(process.env.GROQ_HISTORY_TURNS) || 4;
+const MAX_HISTORY_CHARS = Number(process.env.GROQ_HISTORY_CHARS) || 700;
 
 export function getGroqApiKey() {
   return process.env.GROQ_API_KEY || process.env.GROQ_KEY || '';
 }
 
-function buildSystemPrompt(bundle) {
+function buildSystemPrompt(bundle, question) {
   const hasPrediction = Boolean(bundle?.probabilities || bundle?.modelProbabilities);
+  const ctx = buildLlmContext(bundle, question);
 
-  return `You are an expert UEFA Champions League Final analyst embedded in a prediction app (PSG vs Arsenal, 2026 final in Budapest).
+  return `UCL Final analyst (PSG vs Arsenal, Budapest). Answer from CONTEXT only for numbers; brief tactics OK from general knowledge.
+Rules: cite CONTEXT stats; not financial advice; short bullets if long.
+Win arrays are [home%, draw%, away%]. Stats arrays: match [goals,shots,SOT,corners,cards], team [goals,shots,SOT,poss%].
+${hasPrediction ? 'CONTEXT loaded.' : 'No prediction — suggest running Predict first.'}
 
-Your job: answer ANY user question clearly — tactics, form, betting angles, player props, scorelines, model vs market disagreement, historical context, hypotheticals, and plain-English summaries.
-
-Guidelines:
-1. Ground all NUMBERS (probabilities, xG, shots, scorer %, odds) in APP_CONTEXT JSON below. Do not invent stats not in context.
-2. You MAY use general football knowledge for tactics, styles, and narrative (pressing, transitions, key players) when not contradicting the data.
-3. If APP_CONTEXT is empty or missing predictions, tell the user to open the Predictions tab and press Predict — but still answer general UCL/final questions helpfully.
-4. For completely unrelated topics (homework, code, other sports), briefly redirect to the final or prediction markets.
-5. Structure longer answers with short paragraphs or bullets. Be direct and confident but not reckless.
-6. When discussing betting/Polymarket, note uncertainty; this is not financial advice.
-7. If asked about a player, check playerProps categories, goalscorer list, and roster propProfile data in context first.
-
-${hasPrediction ? 'Prediction data is loaded — use it.' : 'No prediction run yet — user should press Predict for full numbers.'}
-
-APP_CONTEXT:
-${JSON.stringify(compactAnalystBundle(bundle) ?? {}, null, 2)}`;
+CONTEXT:${JSON.stringify(ctx ?? {})}`;
 }
 
-function trimHistory(history, maxTurns = 10) {
+function trimHistory(history, maxTurns = MAX_HISTORY_TURNS) {
   return (history ?? [])
     .filter((m) => m?.role === 'user' || m?.role === 'assistant')
-    .filter((m) => String(m.content ?? '').length < 4000)
     .slice(-maxTurns * 2)
     .map((m) => ({
       role: m.role === 'assistant' ? 'assistant' : 'user',
-      content: String(m.content ?? '').slice(0, 3500)
+      content: String(m.content ?? '').slice(0, MAX_HISTORY_CHARS)
     }));
 }
 
@@ -52,11 +44,12 @@ export async function askGroq({ question, bundle, history }) {
   const apiKey = getGroqApiKey();
   if (!apiKey) return null;
 
+  const q = String(question ?? '').trim();
   const prior = trimHistory(history);
   const messages = [
-    { role: 'system', content: buildSystemPrompt(bundle) },
+    { role: 'system', content: buildSystemPrompt(bundle, q) },
     ...prior,
-    { role: 'user', content: question }
+    { role: 'user', content: q.slice(0, 1200) }
   ];
 
   const res = await fetch(GROQ_API_URL, {
@@ -67,8 +60,8 @@ export async function askGroq({ question, bundle, history }) {
     },
     body: JSON.stringify({
       model: GROQ_MODEL,
-      max_tokens: 2048,
-      temperature: 0.65,
+      max_tokens: MAX_OUTPUT_TOKENS,
+      temperature: 0.6,
       messages
     })
   });

@@ -28,20 +28,22 @@ export function buildAnalystBundle({ prediction = null, polymarket = null, stats
     probabilities: prediction?.probabilities ?? null,
     modelProbabilities: prediction?.modelProbabilities ?? null,
     marketProbabilities: prediction?.marketProbabilities ?? pm?.implied ?? null,
+    knockout: prediction?.knockout ?? null,
     scorelines: prediction?.scorelines ?? [],
     verdict: prediction?.verdict ?? null,
     model: prediction?.model ?? null,
     blend: prediction?.blend ?? null,
+    statsBlend: prediction?.statsBlend ?? null,
     polymarket: pm,
     stats: stats
       ? {
           predictedStats: stats.predictedStats,
           goalscorers: stats.goalscorers,
           assisters: stats.assisters,
-          bettingCategories: stats.bettingCategories,
           playerProps: stats.playerProps,
-          rosterSeason: stats.rosterSeason,
-          dataSources: stats.dataSources
+          blendNote: stats.blendNote,
+          statsBlend: stats.statsBlend,
+          rosterSeason: stats.rosterSeason
         }
       : null,
     dataSources: prediction?.dataSources ?? null,
@@ -66,12 +68,10 @@ export async function enrichAnalystBundle(bundle) {
         predictedStats: stats.predictedStats,
         goalscorers: stats.goalscorers,
         assisters: stats.assisters,
-        bettingCategories: stats.bettingCategories,
         playerProps: stats.playerProps,
         blendNote: stats.blendNote,
         statsBlend: stats.statsBlend,
-        rosterSeason: stats.rosterSeason,
-        dataSources: stats.dataSources
+        rosterSeason: stats.rosterSeason
       }
     };
   } catch {
@@ -79,64 +79,139 @@ export async function enrichAnalystBundle(bundle) {
   }
 }
 
-function topPlayerPropLines(player, maxLines = 3) {
-  return (player.lines ?? []).slice(0, maxLines).map((l) => ({
-    line: l.line,
-    overPct: l.overPct
-  }));
+function topPlayerPropLines(player, maxLines = 2) {
+  return (player.lines ?? []).slice(0, maxLines).map((l) => [l.line, l.overPct]);
 }
 
-/** Slim context for LLM — full stats JSON exceeds Groq on-demand TPM limits. */
-export function compactAnalystBundle(bundle) {
+function questionNeeds(q, patterns) {
+  return patterns.some((p) => q.includes(p));
+}
+
+/** Minimal LLM payload — short keys, question-aware sections, no duplicate fields. */
+export function buildLlmContext(bundle, question = '') {
   if (!bundle) return null;
 
+  const q = String(question || '').toLowerCase();
+  const home = bundle.fixture?.homeTeam ?? 'PSG';
+  const away = bundle.fixture?.awayTeam ?? 'Arsenal';
   const stats = bundle.stats;
-  const playerGoals = stats?.playerProps?.categories?.find((c) => c.id === 'playerGoals')?.players ?? [];
 
-  return {
-    fixture: bundle.fixture,
-    probabilities: bundle.probabilities,
-    modelProbabilities: bundle.modelProbabilities,
-    marketProbabilities: bundle.marketProbabilities,
-    knockout: bundle.knockout ?? null,
-    scorelines: (bundle.scorelines ?? []).slice(0, 7),
-    verdict: bundle.verdict,
-    model: bundle.model,
-    blend: bundle.blend,
-    polymarket: bundle.polymarket
-      ? {
-          found: bundle.polymarket.found,
-          source: bundle.polymarket.source,
-          marketQuestion: bundle.polymarket.marketQuestion,
-          implied: bundle.polymarket.implied ?? bundle.marketProbabilities
-        }
-      : null,
-    stats: stats
-      ? {
-          matchTotals: stats.predictedStats?.match ?? null,
-          home: stats.predictedStats?.home ?? null,
-          away: stats.predictedStats?.away ?? null,
-          goalscorers: (stats.goalscorers ?? []).slice(0, 10),
-          assisters: (stats.assisters ?? []).slice(0, 8),
-          playerProps: (stats.playerProps?.categories ?? []).map((cat) => ({
-            id: cat.id,
-            label: cat.label,
-            players: (cat.players ?? []).slice(0, 6).map((p) => ({
-              name: p.name,
-              team: p.team,
-              expected: p.expected,
-              anytimePct: p.anytimePct,
-              lines: topPlayerPropLines(p)
-            }))
-          })),
-          rosterSeason: stats.rosterSeason
-        }
-      : null,
-    dataSources: bundle.dataSources
-      ? {
-          home: bundle.dataSources.home?.source,
-          away: bundle.dataSources.away?.source
-        }
-      : null
+  const ctx = {
+    fix: `${home} vs ${away} · ${bundle.fixture?.venueCity ?? 'Budapest'} · ${bundle.fixture?.date ?? 'May 30'}`
   };
+
+  if (bundle.blend) {
+    ctx.blend1x2 = `${Math.round((bundle.blend.marketWeight ?? 0) * 100)}% PM / ${Math.round((bundle.blend.modelWeight ?? 0) * 100)}% model`;
+  }
+  if (bundle.statsBlend) {
+    ctx.blendStats = `${Math.round((bundle.statsBlend.marketWeight ?? 0) * 100)}% PM / ${Math.round((bundle.statsBlend.modelWeight ?? 0) * 100)}% model`;
+  }
+
+  if (bundle.probabilities) {
+    ctx.win = {
+      blend: [bundle.probabilities.homeWin, bundle.probabilities.draw, bundle.probabilities.awayWin]
+    };
+  }
+  if (bundle.modelProbabilities) {
+    ctx.win = ctx.win ?? {};
+    ctx.win.model = [
+      bundle.modelProbabilities.homeWin,
+      bundle.modelProbabilities.draw,
+      bundle.modelProbabilities.awayWin
+    ];
+  }
+  if (bundle.marketProbabilities) {
+    ctx.win = ctx.win ?? {};
+    ctx.win.pm = [
+      bundle.marketProbabilities.homeWin,
+      bundle.marketProbabilities.draw,
+      bundle.marketProbabilities.awayWin
+    ];
+  }
+
+  if (bundle.verdict?.summary) ctx.verdict = bundle.verdict.summary;
+
+  const wantScorelines =
+    !q ||
+    questionNeeds(q, ['score', 'scoreline', 'result', 'predict', 'likely', 'summar', 'plain', 'everything']);
+  if (wantScorelines && bundle.scorelines?.length) {
+    ctx.lines = bundle.scorelines.slice(0, 5).map((s) => [s.score, s.probability]);
+  }
+
+  const wantKnockout = questionNeeds(q, ['knockout', 'extra', 'penalt', 'trophy', 'final', 'summar', 'everything', 'win']);
+  if (wantKnockout && bundle.knockout) {
+    ctx.ko = {
+      et: bundle.knockout.extraTimePct,
+      pens: bundle.knockout.penaltiesPct,
+      trophy: [bundle.knockout.toLiftTrophy?.homeWin, bundle.knockout.toLiftTrophy?.awayWin]
+    };
+  }
+
+  if (bundle.model?.lambda || bundle.model?.modelLambda) {
+    ctx.xg = [
+      bundle.model.lambda?.home ?? bundle.model.modelLambda?.home,
+      bundle.model.lambda?.away ?? bundle.model.modelLambda?.away
+    ];
+  }
+
+  const wantStats =
+    !q ||
+    questionNeeds(q, ['stat', 'shot', 'corner', 'possession', 'foul', 'card', 'xg', 'total', 'summar', 'everything', 'bet', 'prop']);
+  if (wantStats && stats?.predictedStats) {
+    const m = stats.predictedStats.match;
+    const h = stats.predictedStats.home;
+    const a = stats.predictedStats.away;
+    ctx.stats = {
+      match: m
+        ? [m.goals, m.shots, m.shotsOnTarget, m.corners, m.yellowCards]
+        : undefined,
+      home: h ? [h.goals, h.shots, h.shotsOnTarget, h.possession] : undefined,
+      away: a ? [a.goals, a.shots, a.shotsOnTarget, a.possession] : undefined,
+      note: stats.blendNote
+    };
+  }
+
+  const wantPlayers =
+    !q ||
+    questionNeeds(q, [
+      'player',
+      'scorer',
+      'goal',
+      'assist',
+      'prop',
+      'saka',
+      'dembele',
+      'dembélé',
+      'gyokeres',
+      'barcola',
+      'shot',
+      'card',
+      'summar',
+      'everything'
+    ]);
+  if (wantPlayers && stats) {
+    if (stats.goalscorers?.length) {
+      ctx.scorers = stats.goalscorers.slice(0, 6).map((p) => [p.name, p.team, p.probability]);
+    }
+    if (questionNeeds(q, ['assist', 'summar', 'everything', 'player', 'prop']) && stats.assisters?.length) {
+      ctx.assists = stats.assisters.slice(0, 5).map((p) => [p.name, p.team, p.probability]);
+    }
+    if (questionNeeds(q, ['prop', 'shot', 'card', 'foul', 'summar', 'everything']) && stats.playerProps?.categories?.length) {
+      ctx.props = stats.playerProps.categories.slice(0, 4).map((cat) => ({
+        id: cat.id,
+        top: (cat.players ?? []).slice(0, 4).map((p) => [p.name, p.team, p.expected, p.anytimePct, topPlayerPropLines(p)])
+      }));
+    }
+  }
+
+  if (bundle.polymarket?.found) {
+    ctx.pm = bundle.polymarket.marketQuestion ?? bundle.polymarket.eventTitle;
+  }
+
+  return ctx;
+}
+
+/** @deprecated Use buildLlmContext — kept for debugging */
+export function compactAnalystBundle(bundle) {
+  return buildLlmContext(bundle, 'everything summarize stats players props scorelines');
 }
