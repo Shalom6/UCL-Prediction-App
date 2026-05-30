@@ -7,7 +7,7 @@ export async function GET(req) {
   try {
     const { searchParams } = new URL(req.url);
     const query = Object.fromEntries(searchParams.entries());
-    const payload = buildStatsResponse(query);
+    const payload = await buildStatsResponse(query);
     return Response.json(payload);
   } catch (err) {
     console.error(err);

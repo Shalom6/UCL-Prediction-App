@@ -1,8 +1,9 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 const TEAM_OPTIONS = ['PSG', 'Arsenal'];
+const POLYMARKET_POLL_MS = 120_000;
 
 function pct(n) {
   return typeof n === 'number' ? `${n.toFixed(1)}%` : '—';
@@ -61,9 +62,13 @@ export default function PredictionsPanel({ onPredictionUpdate }) {
   const [homeTeam, setHomeTeam] = useState('PSG');
   const [awayTeam, setAwayTeam] = useState('Arsenal');
   const [neutralVenue, setNeutralVenue] = useState(true);
+  const [liveMarket, setLiveMarket] = useState(true);
   const [loading, setLoading] = useState(false);
+  const [marketRefreshing, setMarketRefreshing] = useState(false);
   const [error, setError] = useState('');
   const [data, setData] = useState(null);
+  const [marketUpdatedAt, setMarketUpdatedAt] = useState(null);
+  const [nowTick, setNowTick] = useState(Date.now());
 
   const validTeams = homeTeam !== awayTeam;
 
@@ -93,7 +98,9 @@ export default function PredictionsPanel({ onPredictionUpdate }) {
       }
 
       if (!res.ok) throw new Error(json?.error || json?.detail || 'Failed to load predictions');
+      if (json.polymarket?.dataApiNote) delete json.polymarket.dataApiNote;
       setData(json);
+      setMarketUpdatedAt(json.marketUpdatedAt ? Date.parse(json.marketUpdatedAt) : Date.now());
       onPredictionUpdate?.(json);
     } catch (e) {
       setError(e.message);
@@ -102,10 +109,78 @@ export default function PredictionsPanel({ onPredictionUpdate }) {
     }
   }
 
+  const refreshMarket = useCallback(async () => {
+    if (!validTeams || !data?.modelProbabilities || !data?.model?.lambda) return;
+
+    setMarketRefreshing(true);
+    try {
+      const res = await fetch('/api/predictions/market', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          homeTeam,
+          awayTeam,
+          fixture: data.fixture,
+          modelProbabilities: data.modelProbabilities,
+          model: data.model,
+          blend: data.blend,
+          statsBlend: data.statsBlend,
+          marketProbabilities: data.marketProbabilities
+        })
+      });
+
+      const json = await res.json();
+      if (!res.ok) throw new Error(json?.error || json?.detail || 'Market refresh failed');
+      if (json.marketRefreshSkipped) return;
+
+      setData((prev) => {
+        const next = {
+          ...prev,
+          ...json,
+          polymarket: json.polymarket
+            ? { ...json.polymarket, dataApiNote: undefined }
+            : prev.polymarket
+        };
+        onPredictionUpdate?.(next);
+        return next;
+      });
+      setMarketUpdatedAt(Date.parse(json.marketUpdatedAt ?? json.updatedAt) || Date.now());
+    } catch {
+      // Background poll — keep last good values
+    } finally {
+      setMarketRefreshing(false);
+    }
+  }, [awayTeam, data, homeTeam, onPredictionUpdate, validTeams]);
+
   useEffect(() => {
     load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    if (!liveMarket || !data?.marketProbabilities || !validTeams) return undefined;
+
+    const poll = () => {
+      if (document.visibilityState === 'visible') refreshMarket();
+    };
+
+    const interval = setInterval(poll, POLYMARKET_POLL_MS);
+    return () => clearInterval(interval);
+  }, [liveMarket, data?.marketProbabilities, validTeams, refreshMarket, homeTeam, awayTeam]);
+
+  useEffect(() => {
+    if (!liveMarket || !marketUpdatedAt) return undefined;
+    const tick = setInterval(() => setNowTick(Date.now()), 1000);
+    return () => clearInterval(tick);
+  }, [liveMarket, marketUpdatedAt]);
+
+  const marketAgeLabel = useMemo(() => {
+    if (!marketUpdatedAt) return null;
+    const secs = Math.max(0, Math.floor((nowTick - marketUpdatedAt) / 1000));
+    if (secs < 5) return 'just now';
+    if (secs < 60) return `${secs}s ago`;
+    return `${Math.floor(secs / 60)}m ago`;
+  }, [marketUpdatedAt, nowTick]);
 
   const p = data?.probabilities;
   const ko = data?.knockout;
@@ -170,6 +245,19 @@ export default function PredictionsPanel({ onPredictionUpdate }) {
               <span className="toggleText">Neutral</span>
             </label>
           </div>
+          <div className="control toggleControl">
+            <div className="controlLabel">Polymarket</div>
+            <label className="toggle">
+              <input
+                type="checkbox"
+                checked={liveMarket}
+                onChange={(e) => setLiveMarket(e.target.checked)}
+                disabled={!hasMarket && !loading}
+              />
+              <span className="track" aria-hidden="true" />
+              <span className="toggleText">Live</span>
+            </label>
+          </div>
         </div>
         {!validTeams ? <div className="error">Pick two different teams.</div> : null}
         {error ? <div className="error">{error}</div> : null}
@@ -183,13 +271,26 @@ export default function PredictionsPanel({ onPredictionUpdate }) {
 
       {pm?.found && pm.marketQuestion ? (
         <div className="glass card infoCard">
-          <p className="muted small">
-            <span className="badge">Polymarket</span> {pm.marketQuestion}
-            {pm.source ? <span className="dot"> · </span> : null}
-            {pm.source ? <span>{pm.source}</span> : null}
-          </p>
+          <div className="polymarketCardHead">
+            <p className="muted small polymarketCardText">
+              <span className="badge">Polymarket</span> {pm.marketQuestion}
+              {pm.source ? <span className="dot"> · </span> : null}
+              {pm.source ? <span>{pm.source}</span> : null}
+            </p>
+            {liveMarket && hasMarket ? (
+              <div className={`liveBadge${marketRefreshing ? ' liveBadgePulse' : ''}`}>
+                <span className="liveDot" aria-hidden="true" />
+                Live
+                {marketAgeLabel ? <span className="liveAge"> · {marketAgeLabel}</span> : null}
+              </div>
+            ) : null}
+          </div>
           {pm.note ? <p className="muted small">{pm.note}</p> : null}
-          {pm.dataApiNote ? <p className="muted small">{pm.dataApiNote}</p> : null}
+          {liveMarket && hasMarket ? (
+            <p className="muted small">
+              Auto-refreshes every {POLYMARKET_POLL_MS / 1000}s via Polymarket Gamma (cached ~90s on server).
+            </p>
+          ) : null}
         </div>
       ) : null}
 

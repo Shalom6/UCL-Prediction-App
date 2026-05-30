@@ -10,7 +10,8 @@ import cors from 'cors';
 
 import { getAnalystAnswer } from './src/analyst.js';
 import { buildPrediction } from './src/predictor.js';
-import { buildPredictionsResponse } from './src/predictionsEngine.js';
+import { buildPredictionsResponse, applyLivePolymarketUpdate } from './src/predictionsEngine.js';
+import { fetchPolymarketOdds } from './src/polymarket.js';
 import { buildStatsResponse } from './src/stats.js';
 import { getFixtureContext, getTeamProfiles } from './src/sampleData.js';
 
@@ -42,9 +43,9 @@ app.post('/api/predict', (req, res) => {
   }
 });
 
-app.get('/api/stats', (req, res) => {
+app.get('/api/stats', async (req, res) => {
   try {
-    res.json(buildStatsResponse(req.query));
+    res.json(await buildStatsResponse(req.query));
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Stats failed', detail: String(err?.message ?? err) });
@@ -59,6 +60,28 @@ app.post('/api/predictions', async (req, res) => {
     console.error(err);
     const status = String(err?.message ?? '').includes('different') ? 400 : 500;
     res.status(status).json({ error: 'Predictions failed', detail: String(err?.message ?? err) });
+  }
+});
+
+app.post('/api/predictions/market', async (req, res) => {
+  try {
+    const homeTeam = req.body?.homeTeam ?? req.body?.fixture?.homeTeam ?? 'PSG';
+    const awayTeam = req.body?.awayTeam ?? req.body?.fixture?.awayTeam ?? 'Arsenal';
+    if (homeTeam === awayTeam) {
+      return res.status(400).json({ error: 'homeTeam and awayTeam must be different' });
+    }
+    if (!req.body?.modelProbabilities || !req.body?.model?.lambda) {
+      return res.status(400).json({ error: 'Run Predict first — modelProbabilities and model.lambda required' });
+    }
+    const polymarket = await fetchPolymarketOdds(homeTeam, awayTeam, { gammaOnly: true });
+    const updated = applyLivePolymarketUpdate(req.body, polymarket);
+    if (updated.marketRefreshSkipped) {
+      return res.json(updated);
+    }
+    res.json(updated);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Market refresh failed', detail: String(err?.message ?? err) });
   }
 });
 

@@ -97,6 +97,25 @@ function BettingCategoryCard({ category, homeTeam, awayTeam }) {
   );
 }
 
+function formatExpected(n) {
+  if (typeof n !== 'number' || !Number.isFinite(n)) return '—';
+  return n < 10 ? n.toFixed(2) : n.toFixed(1);
+}
+
+function formatPct(n) {
+  if (typeof n !== 'number' || !Number.isFinite(n)) return '—';
+  return `${n.toFixed(1)}%`;
+}
+
+function PlayerPropStat({ label, value, highlight = false }) {
+  return (
+    <div className={`playerPropStat${highlight ? ' playerPropStatHighlight' : ''}`}>
+      <span className="playerPropStatLabel">{label}</span>
+      <span className="playerPropStatValue">{value}</span>
+    </div>
+  );
+}
+
 function PlayerPropCategoryCard({ category }) {
   return (
     <section className="glass card bettingCard playerPropCard">
@@ -107,24 +126,23 @@ function PlayerPropCategoryCard({ category }) {
         </div>
       </div>
 
-      <div className="playerPropTable">
-        <div className="playerPropHead">
-          <span>Player</span>
-          <span>Exp.</span>
-          <span>Key line</span>
-        </div>
+      <div className="playerPropList">
         {category.players.map((row) => {
           const mainLine = row.lines?.[0];
           const displayPct = row.anytimePct ?? mainLine?.overPct;
+          const lineLabel = mainLine ? `O${mainLine.line}` : 'Over';
+
           return (
             <div key={`${row.team}-${row.name}`} className="playerPropRow">
-              <span className="playerPropName">
-                {row.name} <span className="muted">({row.team})</span>
-              </span>
-              <span className="playerPropExp">{row.expected}</span>
-              <span className="playerPropLine">
-                {mainLine ? `O${mainLine.line} ${displayPct}%` : `${displayPct ?? '—'}%`}
-              </span>
+              <div className="playerPropIdentity">
+                <span className="playerPropName">{row.name}</span>
+                <span className="tag playerPropTeam">{row.team}</span>
+              </div>
+              <div className="playerPropStats">
+                <PlayerPropStat label="Expected" value={formatExpected(row.expected)} />
+                <PlayerPropStat label="Line" value={lineLabel} />
+                <PlayerPropStat label="Over" value={formatPct(displayPct)} highlight />
+              </div>
             </div>
           );
         })}
@@ -132,13 +150,21 @@ function PlayerPropCategoryCard({ category }) {
 
       {category.players.some((p) => p.lines?.length > 1) ? (
         <div className="playerPropLinesBlock">
-          <div className="sourceLabel">Modelled Over / Under</div>
+          <div className="sourceLabel">All modelled lines (top players)</div>
           {category.players.slice(0, 5).map((row) => (
             <div key={`lines-${row.team}-${row.name}`} className="playerPropLinesGroup">
               <div className="playerPropLinesTitle">
                 {row.name} <span className="muted">({row.team})</span>
               </div>
-              <OuTable lines={row.lines} />
+              <div className="playerPropLineChips">
+                {row.lines.map((line) => (
+                  <div key={line.line} className="playerPropLineChip">
+                    <span className="playerPropStatLabel">O{line.line}</span>
+                    <span className="playerPropStatValue">{formatPct(line.overPct)}</span>
+                    <span className="playerPropUnder muted small">U {formatPct(line.underPct)}</span>
+                  </div>
+                ))}
+              </div>
             </div>
           ))}
         </div>
@@ -216,6 +242,7 @@ export default function StatsPanel({ fixture }) {
   const assisters = data?.assisters ?? [];
   const matchTotals = data?.predictedStats?.match;
   const rosterSeason = data?.rosterSeason ?? '2025-26';
+  const blendNote = data?.blendNote;
 
   return (
     <section className="statsEngine">
@@ -248,7 +275,8 @@ export default function StatsPanel({ fixture }) {
 
       <section className="glass card infoCard">
         <p className="muted small" style={{ margin: 0 }}>
-          Poisson model + {rosterSeason} squads. Projections are computed in-app from team rates and match context.
+          {blendNote ??
+            `Poisson model + ${rosterSeason} squads. Projections are computed in-app from team rates and match context.`}
         </p>
       </section>
 

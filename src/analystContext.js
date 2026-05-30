@@ -55,7 +55,7 @@ export async function enrichAnalystBundle(bundle) {
   if (bundle.stats?.predictedStats) return bundle;
 
   try {
-    const stats = buildStatsResponse({
+    const stats = await buildStatsResponse({
       homeTeam,
       awayTeam,
       neutralVenue: neutralVenue !== false
@@ -66,7 +66,10 @@ export async function enrichAnalystBundle(bundle) {
         predictedStats: stats.predictedStats,
         goalscorers: stats.goalscorers,
         assisters: stats.assisters,
+        bettingCategories: stats.bettingCategories,
         playerProps: stats.playerProps,
+        blendNote: stats.blendNote,
+        statsBlend: stats.statsBlend,
         rosterSeason: stats.rosterSeason,
         dataSources: stats.dataSources
       }

@@ -11,6 +11,35 @@ dotenv.config({ path: path.join(appRoot, '..', '.env.local') });
 const DATA_API_BASE = 'https://api.polymarketdata.co/v1';
 const GAMMA_API_BASE = 'https://gamma-api.polymarket.com';
 
+const GAMMA_CACHE_MS = 90_000;
+const EVENT_CACHE_MS = 60_000;
+const DATA_API_BACKOFF_MS = 15 * 60_000;
+
+const oddsCache = new Map();
+const gammaEventIdCache = new Map();
+let dataApiBlockedUntil = 0;
+
+// Known UCL 2026 final event — avoids search on every refresh
+gammaEventIdCache.set('PSG|Arsenal', 507693);
+
+function readCache(key) {
+  const entry = oddsCache.get(key);
+  if (!entry || Date.now() > entry.expiresAt) return null;
+  return { ...entry.data, fromCache: true };
+}
+
+function writeCache(key, data, ttlMs) {
+  oddsCache.set(key, { data, expiresAt: Date.now() + ttlMs });
+}
+
+function fixturePairKey(homeTeam, awayTeam) {
+  return `${homeTeam}|${awayTeam}`;
+}
+
+function shouldUseDataApi() {
+  return process.env.POLYMARKET_USE_DATA_API === '1' && Boolean(getPolymarketApiKey());
+}
+
 export function getPolymarketApiKey() {
   return (
     process.env.POLYMARKET_DATA_API_KEY ||
@@ -120,6 +149,72 @@ function normalizeImplied(outcomes) {
   }));
 }
 
+function yesPriceFromMarket(market) {
+  const outcomes = parseGammaMarket(market);
+  const yes = outcomes.find((o) => String(o.name).toLowerCase() === 'yes');
+  return yes?.probabilityPct ?? null;
+}
+
+/**
+ * Polymarket often lists finals as three Yes/No markets (home win, draw, away win).
+ */
+function parseSplitMatchMarkets(event, homeTeam, awayTeam) {
+  const markets = (event?.markets || []).filter((m) => !m?.closed);
+  let homeWin = null;
+  let awayWin = null;
+  let draw = null;
+  let homeQuestion = null;
+  let awayQuestion = null;
+  let drawQuestion = null;
+
+  for (const market of markets) {
+    const q = market.question || '';
+    const ql = q.toLowerCase();
+    const yesPct = yesPriceFromMarket(market);
+    if (yesPct == null || !isLiveGammaPrices(parseGammaMarket(market))) continue;
+
+    if (ql.includes('draw') || ql.includes('end in a')) {
+      draw = yesPct;
+      drawQuestion = q;
+      continue;
+    }
+    if (matchTeam(q, homeTeam) && (ql.includes(' win') || ql.includes(' beat'))) {
+      homeWin = yesPct;
+      homeQuestion = q;
+      continue;
+    }
+    if (matchTeam(q, awayTeam) && (ql.includes(' win') || ql.includes(' beat'))) {
+      awayWin = yesPct;
+      awayQuestion = q;
+    }
+  }
+
+  if (homeWin == null || awayWin == null || draw == null) return null;
+
+  const outcomes = normalizeImplied([
+    { name: homeTeam, probabilityPct: homeWin },
+    { name: 'Draw', probabilityPct: draw },
+    { name: awayTeam, probabilityPct: awayWin }
+  ]);
+
+  const implied = map1x2(outcomes, homeTeam, awayTeam);
+  if (!implied) return null;
+
+  return {
+    found: true,
+    implied,
+    source: 'polymarket.com (Gamma)',
+    marketType: 'match_split',
+    fetchedAt: new Date().toISOString(),
+    homeTeam,
+    awayTeam,
+    eventTitle: event.title,
+    marketQuestion: event.title || `${homeQuestion} · ${drawQuestion} · ${awayQuestion}`,
+    outcomes,
+    volume: event.volume ?? null
+  };
+}
+
 function map1x2(outcomes, homeTeam, awayTeam) {
   let homeWin = null;
   let draw = null;
@@ -190,10 +285,20 @@ function scoreGammaEvent(event, homeTeam, awayTeam) {
   const title = (event?.title || '').toLowerCase();
   const hasBoth = matchTeam(title, homeTeam) && matchTeam(title, awayTeam);
   if (!hasBoth) return -1;
+
   let score = Number(event?.volume ?? 0);
   if (event?.closed) score *= 0.01;
-  if (title.includes('final') || title.includes('vs')) score += 50_000;
-  if (title.includes('advance') || title.includes('winner')) score += 10_000;
+
+  if (title.includes('advance') || title.includes('semifinal') || title.includes('quarter')) {
+    score *= 0.001;
+  }
+  if (title.includes('winner') && !title.includes(' vs')) {
+    score *= 0.001;
+  }
+
+  if (title.includes(' vs') || title.includes(' vs.')) score += 100_000;
+  if (parseSplitMatchMarkets(event, homeTeam, awayTeam)) score += 500_000;
+
   return score;
 }
 
@@ -205,11 +310,45 @@ async function gammaSearch(query) {
   return Array.isArray(payload?.events) ? payload.events : [];
 }
 
+async function fetchGammaEventById(eventId) {
+  const cacheKey = `gamma-event:${eventId}`;
+  const cached = readCache(cacheKey);
+  if (cached) return cached;
+
+  const res = await fetch(`${GAMMA_API_BASE}/events/${eventId}`, { cache: 'no-store' });
+  if (!res.ok) return null;
+  const event = await res.json();
+  writeCache(cacheKey, event, EVENT_CACHE_MS);
+  return event;
+}
+
+function rememberGammaEvent(homeTeam, awayTeam, eventId) {
+  if (eventId) gammaEventIdCache.set(fixturePairKey(homeTeam, awayTeam), eventId);
+}
+
+function splitFromGammaEvent(event, homeTeam, awayTeam) {
+  if (!event || event.closed) return null;
+  const split = parseSplitMatchMarkets(event, homeTeam, awayTeam);
+  if (split) {
+    rememberGammaEvent(homeTeam, awayTeam, event.id);
+    return split;
+  }
+  return null;
+}
+
 async function fetchGammaMatchOdds(homeTeam, awayTeam) {
+  const pairKey = fixturePairKey(homeTeam, awayTeam);
+  const knownEventId = gammaEventIdCache.get(pairKey);
+
+  if (knownEventId) {
+    const event = await fetchGammaEventById(knownEventId);
+    const split = splitFromGammaEvent(event, homeTeam, awayTeam);
+    if (split) return split;
+  }
+
   const queries = [
-    `${homeTeam} ${awayTeam} Champions League`,
-    `${homeTeam} vs ${awayTeam}`,
-    `Champions League ${homeTeam} ${awayTeam}`
+    'Paris Saint-Germain FC Arsenal FC',
+    `${homeTeam} ${awayTeam} Champions League Final`
   ];
 
   const events = [];
@@ -225,6 +364,9 @@ async function fetchGammaMatchOdds(homeTeam, awayTeam) {
   for (const event of events) {
     if (scoreGammaEvent(event, homeTeam, awayTeam) < 0) continue;
 
+    const split = splitFromGammaEvent(event, homeTeam, awayTeam);
+    if (split) return split;
+
     for (const market of event.markets || []) {
       if (market?.closed) continue;
       const outcomes = normalizeImplied(parseGammaMarket(market));
@@ -232,6 +374,8 @@ async function fetchGammaMatchOdds(homeTeam, awayTeam) {
 
       const implied = map1x2(outcomes, homeTeam, awayTeam);
       if (!implied) continue;
+
+      rememberGammaEvent(homeTeam, awayTeam, event.id);
 
       return {
         found: true,
@@ -347,42 +491,55 @@ async function fetchDataApiOdds(apiKey, homeTeam, awayTeam) {
 }
 
 /**
- * Fetch live Polymarket odds: Data API (if key) then public Gamma API fallback.
+ * Fetch live Polymarket odds.
+ * @param {string} homeTeam
+ * @param {string} awayTeam
+ * @param {{ gammaOnly?: boolean, skipCache?: boolean }} [options]
+ *   gammaOnly — default true; uses public Gamma API (final 1X2). Set false + POLYMARKET_USE_DATA_API=1 for Data API.
  */
-export async function fetchPolymarketOdds(homeTeam, awayTeam) {
-  const apiKey = getPolymarketApiKey();
-  let dataApiNote = null;
+export async function fetchPolymarketOdds(homeTeam, awayTeam, options = {}) {
+  const gammaOnly = options.gammaOnly !== false;
+  const cacheKey = `${fixturePairKey(homeTeam, awayTeam)}|${gammaOnly ? 'gamma' : 'auto'}`;
 
-  if (apiKey) {
+  if (!options.skipCache) {
+    const cached = readCache(cacheKey);
+    if (cached) return cached;
+  }
+
+  if (!gammaOnly && shouldUseDataApi() && Date.now() > dataApiBlockedUntil) {
     try {
-      const dataResult = await fetchDataApiOdds(apiKey, homeTeam, awayTeam);
-      if (dataResult.found) return dataResult;
-      dataApiNote = dataResult.message;
+      const dataResult = await fetchDataApiOdds(getPolymarketApiKey(), homeTeam, awayTeam);
+      if (dataResult.found) {
+        writeCache(cacheKey, dataResult, 5 * 60_000);
+        return dataResult;
+      }
     } catch (err) {
-      dataApiNote = String(err?.message ?? err);
+      const msg = String(err?.message ?? err);
+      if (msg.includes('429') || msg.includes('Rate limit')) {
+        dataApiBlockedUntil = Date.now() + DATA_API_BACKOFF_MS;
+      }
     }
   }
 
   try {
     const gamma = await fetchGammaMatchOdds(homeTeam, awayTeam);
     if (gamma?.found) {
-      return apiKey ? { ...gamma, dataApiNote: dataApiNote || 'Data API had no UCL match; using live Polymarket Gamma feed' } : gamma;
+      writeCache(cacheKey, gamma, GAMMA_CACHE_MS);
+      return gamma;
     }
   } catch (err) {
     return {
       found: false,
       implied: null,
-      source: apiKey ? 'polymarketdata.co + polymarket.com' : 'polymarket.com',
-      error: String(err?.message ?? err),
-      dataApiNote
+      source: 'polymarket.com (Gamma)',
+      error: String(err?.message ?? err)
     };
   }
 
   return {
     found: false,
     implied: null,
-    source: apiKey ? 'polymarketdata.co + polymarket.com' : 'polymarket.com',
-    message: `No live Polymarket odds for ${homeTeam} vs ${awayTeam}`,
-    dataApiNote
+    source: 'polymarket.com (Gamma)',
+    message: `No live Polymarket odds for ${homeTeam} vs ${awayTeam}`
   };
 }

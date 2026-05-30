@@ -116,7 +116,7 @@ function blendOutcomes(a, b, wa, wb) {
   });
 }
 
-function buildExpectedStats({ home, away, lambdaHome, lambdaAway, context }) {
+export function buildExpectedStats({ home, away, lambdaHome, lambdaAway, context }) {
   const finalTempo = context.finalTempo ?? 0.95;
   const homeXg = lambdaHome * (home.xgPerGoal ?? 1.05);
   const awayXg = lambdaAway * (away.xgPerGoal ?? 1.05);
@@ -163,6 +163,36 @@ function topScorelines(matrix, homeName, awayName, topN = 7) {
       awayGoals: c.a,
       probability: round(c.p * 100, 1)
     }));
+}
+
+/** Infer Poisson lambdas that best match Polymarket 1X2 (%). */
+export function fitLambdasFrom1x2Pct(impliedPct) {
+  if (!impliedPct) return null;
+  const target = {
+    homeWin: (impliedPct.homeWin ?? 0) / 100,
+    draw: (impliedPct.draw ?? 0) / 100,
+    awayWin: (impliedPct.awayWin ?? 0) / 100
+  };
+  const total = target.homeWin + target.draw + target.awayWin;
+  if (total <= 0) return null;
+
+  let best = { home: 1.4, away: 1.2, err: Infinity };
+  for (let lh = 0.4; lh <= 3.2; lh += 0.04) {
+    for (let la = 0.4; la <= 3.2; la += 0.04) {
+      const o = outcomeFromMatrix(scoreMatrix(lh, la, 6));
+      const err =
+        Math.abs(o.homeWin - target.homeWin) +
+        Math.abs(o.draw - target.draw) * 1.25 +
+        Math.abs(o.awayWin - target.awayWin);
+      if (err < best.err) best = { home: lh, away: la, err };
+    }
+  }
+
+  return { home: round(best.home, 2), away: round(best.away, 2) };
+}
+
+export function scorelinesFromLambdas(homeName, awayName, lambdaHome, lambdaAway, topN = 7) {
+  return topScorelines(scoreMatrix(lambdaHome, lambdaAway, 6), homeName, awayName, topN);
 }
 
 export function isGoalkeeperPlayer(player) {
